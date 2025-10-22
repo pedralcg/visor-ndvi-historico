@@ -1,4 +1,4 @@
-// frontend/src/components/NDVIChart.jsx
+// frontend/src/components/NDVIChart.jsx - Actualizado al tema claro
 import React, { memo } from "react";
 import { Line } from "react-chartjs-2";
 import {
@@ -22,7 +22,6 @@ ChartJS.register(
   Legend
 );
 
-// AHORA ACEPTA EL HISTORIAL COMPLETO
 const NDVIChart = memo(({ ndviHistory = [] }) => {
   const historyAvailable = ndviHistory.length > 0;
 
@@ -35,11 +34,12 @@ const NDVIChart = memo(({ ndviHistory = [] }) => {
           alignItems: "center",
           justifyContent: "center",
           textAlign: "center",
-          color: "#546E7A",
+          color: "#78716c",
           fontSize: "0.95rem",
-          padding: 10,
-          background: "#F5F7FA",
-          borderRadius: 4,
+          padding: 20,
+          background: "rgba(250, 250, 249, 0.8)",
+          borderRadius: "10px",
+          border: "1px solid #e7e5e4",
         }}
       >
         <p>
@@ -50,7 +50,6 @@ const NDVIChart = memo(({ ndviHistory = [] }) => {
     );
   }
 
-  // Generar etiquetas y datos a partir del historial
   const labels = ndviHistory.map((item) => item.date);
   const dataValues = ndviHistory.map((item) => item.mean_ndvi);
 
@@ -59,14 +58,18 @@ const NDVIChart = memo(({ ndviHistory = [] }) => {
     datasets: [
       {
         label: "NDVI medio",
-        // Color Azul Cian/Teal moderno
-        borderColor: "#00B8D9",
-        backgroundColor: "rgba(0, 184, 217, 0.2)",
-        data: dataValues, // <-- Usar el array de valores
-        borderWidth: 2,
+        borderColor: "#047857",
+        backgroundColor: "rgba(4, 120, 87, 0.15)",
+        data: dataValues,
+        borderWidth: 3,
         tension: 0.3,
         pointRadius: 6,
         pointHoverRadius: 8,
+        pointBackgroundColor: "#047857",
+        pointBorderColor: "#ffffff",
+        pointBorderWidth: 2,
+        pointHoverBackgroundColor: "#047857",
+        pointHoverBorderColor: "#ffffff",
         fill: true,
       },
     ],
@@ -80,14 +83,49 @@ const NDVIChart = memo(({ ndviHistory = [] }) => {
       y: {
         min: 0,
         max: 1,
-        ticks: { stepSize: 0.1, color: "#3A4145" },
-        grid: { color: "#E4E7EB" },
-        title: { display: true, text: "NDVI", color: "#3A4145" },
+        ticks: {
+          stepSize: 0.1,
+          color: "#57534e",
+          font: {
+            size: 12,
+            weight: "500",
+          },
+        },
+        grid: {
+          color: "#e7e5e4",
+          lineWidth: 1,
+        },
+        title: {
+          display: true,
+          text: "NDVI",
+          color: "#1c1917",
+          font: {
+            size: 13,
+            weight: "600",
+          },
+        },
       },
       x: {
-        ticks: { color: "#3A4145" },
-        grid: { color: "#E4E7EB" },
-        title: { display: true, text: "Fecha de la imagen", color: "#3A4145" },
+        ticks: {
+          color: "#57534e",
+          font: {
+            size: 11,
+            weight: "500",
+          },
+        },
+        grid: {
+          color: "#f5f5f4",
+          lineWidth: 1,
+        },
+        title: {
+          display: true,
+          text: "Fecha de la imagen",
+          color: "#1c1917",
+          font: {
+            size: 13,
+            weight: "600",
+          },
+        },
       },
     },
     plugins: {
@@ -105,17 +143,33 @@ const NDVIChart = memo(({ ndviHistory = [] }) => {
             return label;
           },
         },
-        backgroundColor: "rgba(58, 65, 69, 0.9)",
-        titleColor: "#FFFFFF",
-        bodyColor: "#FFFFFF",
-        borderColor: "#00B8D9",
-        borderWidth: 1,
+        backgroundColor: "#1c1917",
+        titleColor: "#ffffff",
+        bodyColor: "#ffffff",
+        borderColor: "#047857",
+        borderWidth: 2,
+        padding: 12,
+        displayColors: true,
+        boxPadding: 6,
+        font: {
+          size: 13,
+        },
       },
     },
   };
 
   return (
-    <div style={{ height: "180px", marginBottom: "20px" }}>
+    <div
+      style={{
+        height: "200px",
+        marginBottom: "20px",
+        padding: "15px",
+        background: "#ffffff",
+        borderRadius: "10px",
+        border: "1px solid #e7e5e4",
+        boxShadow: "0 1px 3px rgba(28, 25, 23, 0.08)",
+      }}
+    >
       <Line data={data} options={options} />
     </div>
   );

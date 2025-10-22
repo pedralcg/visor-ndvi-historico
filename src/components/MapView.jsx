@@ -1,4 +1,4 @@
-// frontend/src/components/MapView.jsx
+// frontend/src/components/MapView.jsx - Actualizado al tema claro
 import React, {
   useEffect,
   useRef,
@@ -10,9 +10,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
 
-// ----------------------------------------------------
-// FIX DE ÍCONOS DE MARCADOR DE LEAFLET
-// ----------------------------------------------------
+// Fix de íconos de marcador de Leaflet
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconRetina from "leaflet/dist/images/marker-icon-2x.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
@@ -29,21 +27,16 @@ L.Icon.Default.mergeOptions({
   tooltipAnchor: [16, -28],
   shadowSize: [41, 41],
 });
-// ----------------------------------------------------
 
-// Usamos forwardRef para permitir que App.js llame a clearAllNdviLayers
 const MapView = forwardRef(
   ({ onGeometrySelected, ndviTileUrl, onReset, lastNdviDate }, ref) => {
     const mapRef = useRef(null);
     const drawnItemsRef = useRef(null);
     const layersControlRef = useRef(null);
-    // Estado para rastrear las capas NDVI (Nombre: Capa Leaflet)
     const [ndviLayersMap, setNdviLayersMap] = useState(new Map());
 
-    // Función de limpieza de capas, expuesta al componente padre
     const clearAllNdviLayers = () => {
       if (mapRef.current && layersControlRef.current) {
-        // Remover capas del mapa y del control
         ndviLayersMap.forEach((layer, name) => {
           try {
             layersControlRef.current.removeLayer(layer);
@@ -52,13 +45,19 @@ const MapView = forwardRef(
             console.warn("Error al intentar eliminar capa NDVI:", name, e);
           }
         });
-        setNdviLayersMap(new Map()); // Limpiar el estado
+        setNdviLayersMap(new Map());
       }
     };
 
-    // Exponer la función de limpieza al componente padre a través de la ref
+    const invalidateSize = () => {
+      if (mapRef.current) {
+        mapRef.current.invalidateSize();
+      }
+    };
+
     useImperativeHandle(ref, () => ({
       clearAllNdviLayers: clearAllNdviLayers,
+      invalidateSize: invalidateSize,
     }));
 
     useEffect(() => {
@@ -128,20 +127,29 @@ const MapView = forwardRef(
           }
         });
 
-        // Limpiar capas NDVI al borrar el dibujo
+        map.on(L.Draw.Event.EDITED, (e) => {
+          e.layers.each((layer) => {
+            let geojson = layer.toGeoJSON();
+            if (layer instanceof L.Circle) {
+              geojson.properties.radius = layer.getRadius();
+            }
+            onGeometrySelected(geojson);
+          });
+        });
+
         map.on(L.Draw.Event.DELETED, () => {
           onReset();
           clearAllNdviLayers();
         });
       });
 
-      // Leyenda - Corregida y con estilo moderno
+      // Leyenda actualizada al tema claro
       const legend = L.control({ position: "bottomright" });
       legend.onAdd = () => {
         const div = L.DomUtil.create("div", "ndvi-legend");
         div.innerHTML = `
-        <h4 style="margin-bottom:8px; font-size:14px; color:#3A4145;">NDVI (Vegetación)</h4>
-        <div style="line-height:20px; font-size:12px; font-weight: 500;">
+        <h4 style="margin-bottom:8px; font-size:14px; color:#1c1917; font-weight: 700;">NDVI (Vegetación)</h4>
+        <div style="line-height:20px; font-size:12px; font-weight: 500; color: #57534e;">
           <i style="background:#006837; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px;"></i> > 0.6 (Saludable)<br>
           <i style="background:#1a9850; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px;"></i> 0.4 - 0.6<br>
           <i style="background:#fee08b; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px;"></i> 0.2 - 0.4<br>
@@ -153,11 +161,15 @@ const MapView = forwardRef(
       legend.addTo(map);
 
       mapRef.current = map;
+
+      setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.invalidateSize();
+        }
+      }, 300);
     }, [onGeometrySelected, onReset, ref, ndviLayersMap]);
 
-    // Efecto para añadir nuevas capas NDVI
     useEffect(() => {
-      // Si no tenemos URL, fecha, mapa o control de capas, salimos.
       if (
         !mapRef.current ||
         !ndviTileUrl ||
@@ -169,38 +181,35 @@ const MapView = forwardRef(
       const map = mapRef.current;
       const layerName = `🌿 NDVI (${lastNdviDate})`;
 
-      // Si la capa con esta fecha ya existe, no hacemos nada para evitar duplicados
       if (ndviLayersMap.has(layerName)) {
         return;
       }
 
       const ndvi = L.tileLayer(ndviTileUrl, { opacity: 0.7 });
-      // Añadir al mapa y activarla por defecto
       ndvi.addTo(map);
 
-      // Añadir al control de capas como overlay (para que sea toggleable)
       layersControlRef.current.addOverlay(ndvi, layerName);
 
-      // Almacenar en el estado
       setNdviLayersMap((prevMap) => {
         const newMap = new Map(prevMap);
         newMap.set(layerName, ndvi);
         return newMap;
       });
-    }, [ndviTileUrl, lastNdviDate, ndviLayersMap]); // Depende del último tile URL y la fecha
+    }, [ndviTileUrl, lastNdviDate, ndviLayersMap]);
 
     return (
-      <div id="map" style={{ height: "100vh", width: "100%" }}>
+      <div id="map" style={{ height: "100%", width: "100%" }}>
         <style>
           {`
-          /* Estilo para la leyenda */
+          /* Estilo para la leyenda - tema claro */
           .ndvi-legend {
-            background: rgba(255,255,255,1); 
-            border-radius: 8px;
-            padding: 12px 16px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            font-family: 'Roboto', sans-serif;
-            color: #3A4145; 
+            background: #ffffff; 
+            border-radius: 10px;
+            padding: 14px 18px;
+            box-shadow: 0 4px 12px rgba(28, 25, 23, 0.12);
+            border: 1px solid #e7e5e4;
+            font-family: 'Inter', 'Roboto', sans-serif;
+            color: #1c1917; 
           }
         `}
         </style>

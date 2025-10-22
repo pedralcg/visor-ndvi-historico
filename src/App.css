@@ -36,3 +36,19 @@
     transform: rotate(360deg);
   }
 }
+
+/* ====================================================================\
+// CORRECCIÓN CLAVE: Clases de Layout Flexbox para App.jsx
+// ====================================================================*/
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Ocupa la altura completa de #root */
+  width: 100%;
+}
+
+.content-container {
+  flex-grow: 1; /* 🔥 CLAVE: Ocupa todo el espacio vertical restante bajo el Navbar */
+  height: 100%; /* Referencia de altura para los hijos (NdviApp, centeredWrapperStyle) */
+  overflow: auto; /* Evita que el scroll general del body aparezca */
+}

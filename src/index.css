@@ -1,3 +1,14 @@
+/* ====================================================================\
+// CORRECCIÓN CLAVE: Propaga el 100% de altura de la ventana
+// ====================================================================*/
+html,
+body,
+#root {
+  height: 100%; /* 🔥 CORRECCIÓN CLAVE: Sin esto, ningún 100% funciona. */
+  margin: 0;
+}
+/* ====================================================================*/
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
