@@ -1,4 +1,4 @@
-// frontend/src/components/MapView.jsx - Actualizado al tema claro
+// frontend/src/components/MapView.jsx - Actualizado con leyendas dinámicas
 import React, {
   useEffect,
   useRef,
@@ -33,6 +33,7 @@ const MapView = forwardRef(
     const mapRef = useRef(null);
     const drawnItemsRef = useRef(null);
     const layersControlRef = useRef(null);
+    const legendRef = useRef(null);
     const [ndviLayersMap, setNdviLayersMap] = useState(new Map());
 
     const clearAllNdviLayers = () => {
@@ -42,7 +43,7 @@ const MapView = forwardRef(
             layersControlRef.current.removeLayer(layer);
             mapRef.current.removeLayer(layer);
           } catch (e) {
-            console.warn("Error al intentar eliminar capa NDVI:", name, e);
+            console.warn("Error al intentar eliminar capa:", name, e);
           }
         });
         setNdviLayersMap(new Map());
@@ -55,9 +56,35 @@ const MapView = forwardRef(
       }
     };
 
+    // Método para actualizar la leyenda dinámicamente
+    const updateLegend = (config) => {
+      if (legendRef.current && config?.html) {
+        const legendDiv = legendRef.current.getContainer();
+        if (legendDiv) {
+          legendDiv.innerHTML = config.html;
+          // Hacer visible la leyenda cuando se actualiza
+          legendDiv.style.display = "block";
+        }
+      }
+    };
+
+    // Método para ocultar la leyenda
+    const hideLegend = () => {
+      if (legendRef.current) {
+        const legendDiv = legendRef.current.getContainer();
+        if (legendDiv) {
+          legendDiv.style.display = "none";
+        }
+      }
+    };
+
     useImperativeHandle(ref, () => ({
       clearAllNdviLayers: clearAllNdviLayers,
       invalidateSize: invalidateSize,
+      updateLegend: updateLegend,
+      hideLegend: hideLegend,
+      getLayersControl: () => layersControlRef.current,
+      getMap: () => mapRef.current,
     }));
 
     useEffect(() => {
@@ -70,14 +97,17 @@ const MapView = forwardRef(
         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
         { attribution: "© OpenStreetMap" }
       ).addTo(map);
+
       const esriSat = L.tileLayer(
         "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         { attribution: "© Esri, Maxar" }
       );
+
       const topo = L.tileLayer(
         "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
         { attribution: "© OpenTopoMap" }
       );
+
       const emptyBase = L.tileLayer("", { attribution: "" });
 
       const bases = {
@@ -140,27 +170,35 @@ const MapView = forwardRef(
         map.on(L.Draw.Event.DELETED, () => {
           onReset();
           clearAllNdviLayers();
+          hideLegend(); // Ocultar leyenda al borrar geometría
         });
       });
 
-      // Leyenda actualizada al tema claro
+      // Leyenda inicialmente oculta (se mostrará dinámicamente)
       const legend = L.control({ position: "bottomright" });
       legend.onAdd = () => {
-        const div = L.DomUtil.create("div", "ndvi-legend");
+        const div = L.DomUtil.create("div", "index-legend");
+        div.style.display = "none"; // Oculta por defecto
         div.innerHTML = `
-        <h4 style="margin-bottom:8px; font-size:14px; color:#1c1917; font-weight: 700;">NDVI (Vegetación)</h4>
-        <div style="line-height:20px; font-size:12px; font-weight: 500; color: #57534e;">
-          <i style="background:#006837; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px;"></i> > 0.6 (Saludable)<br>
-          <i style="background:#1a9850; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px;"></i> 0.4 - 0.6<br>
-          <i style="background:#fee08b; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px;"></i> 0.2 - 0.4<br>
-          <i style="background:#fdae61; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px;"></i> 0.0 - 0.2<br>
-          <i style="background:#d73027; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px;"></i> < 0.0 (Poca/Nula)
-        </div>`;
+          <h4 style="margin-bottom:8px; font-size:14px; color:#1c1917; font-weight: 700;">
+            Selecciona un índice
+          </h4>
+          <div style="line-height:20px; font-size:12px; font-weight: 500; color: #57534e;">
+            Dibuja un área y calcula un índice<br>para ver la leyenda aquí.
+          </div>
+        `;
         return div;
       };
       legend.addTo(map);
+      legendRef.current = legend;
 
       mapRef.current = map;
+
+      // Guardar referencia al mapa en el DOM para acceso externo
+      const mapContainer = document.getElementById("map");
+      if (mapContainer) {
+        mapContainer._leaflet_map = map;
+      }
 
       setTimeout(() => {
         if (mapRef.current) {
@@ -201,15 +239,128 @@ const MapView = forwardRef(
       <div id="map" style={{ height: "100%", width: "100%" }}>
         <style>
           {`
-          /* Estilo para la leyenda - tema claro */
-          .ndvi-legend {
-            background: #ffffff; 
-            border-radius: 10px;
-            padding: 14px 18px;
-            box-shadow: 0 4px 12px rgba(28, 25, 23, 0.12);
+          /* Estilo para la leyenda - tema claro actualizado */
+          .index-legend {
+            background: rgba(255, 255, 255, 0.95); 
+            backdrop-filter: blur(8px);
+            border-radius: 12px;
+            padding: 16px 20px;
+            box-shadow: 0 4px 16px rgba(28, 25, 23, 0.15);
             border: 1px solid #e7e5e4;
-            font-family: 'Inter', 'Roboto', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             color: #1c1917; 
+            max-width: 280px;
+            transition: all 0.3s ease;
+          }
+          
+          .index-legend:hover {
+            box-shadow: 0 6px 20px rgba(28, 25, 23, 0.2);
+          }
+          
+          .index-legend h4 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #1c1917;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+          }
+          
+          .index-legend div {
+            line-height: 22px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #57534e;
+          }
+          
+          .index-legend i {
+            display: inline-block;
+            width: 18px;
+            height: 10px;
+            float: left;
+            margin-right: 8px;
+            margin-top: 6px;
+            border-radius: 2px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+          }
+
+          /* Estilos para el control de capas - tema claro */
+          .leaflet-control-layers {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(8px);
+            border: 1px solid #e7e5e4 !important;
+            border-radius: 10px !important;
+            box-shadow: 0 4px 12px rgba(28, 25, 23, 0.12) !important;
+            padding: 8px !important;
+          }
+
+          .leaflet-control-layers-toggle {
+            background-color: #ffffff !important;
+            border: 1px solid #e7e5e4 !important;
+          }
+
+          .leaflet-control-layers-expanded {
+            padding: 12px 14px !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            color: #1c1917 !important;
+          }
+
+          .leaflet-control-layers-base label,
+          .leaflet-control-layers-overlays label {
+            color: #1c1917 !important;
+            font-weight: 500 !important;
+            font-size: 13px !important;
+            padding: 4px 0 !important;
+          }
+
+          .leaflet-control-layers-separator {
+            border-top: 1px solid #e7e5e4 !important;
+            margin: 8px 0 !important;
+          }
+
+          /* Estilos para los controles de dibujo - tema claro */
+          .leaflet-draw-toolbar a {
+            background-color: #ffffff !important;
+            border: 1px solid #e7e5e4 !important;
+          }
+
+          .leaflet-draw-toolbar a:hover {
+            background-color: #f5f5f4 !important;
+            border-color: #047857 !important;
+          }
+
+          .leaflet-draw-actions a {
+            background-color: #ffffff !important;
+            border: 1px solid #e7e5e4 !important;
+            color: #1c1917 !important;
+          }
+
+          .leaflet-draw-actions a:hover {
+            background-color: #047857 !important;
+            color: #ffffff !important;
+          }
+
+          /* Tooltips del mapa */
+          .leaflet-tooltip {
+            background-color: #1c1917 !important;
+            color: #ffffff !important;
+            border: 1px solid #047857 !important;
+            border-radius: 6px !important;
+            padding: 6px 10px !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            font-weight: 500 !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+          }
+
+          /* Zoom control - tema claro */
+          .leaflet-control-zoom a {
+            background-color: #ffffff !important;
+            border: 1px solid #e7e5e4 !important;
+            color: #1c1917 !important;
+          }
+
+          .leaflet-control-zoom a:hover {
+            background-color: #f5f5f4 !important;
+            border-color: #047857 !important;
           }
         `}
         </style>

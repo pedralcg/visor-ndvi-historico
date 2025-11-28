@@ -1,8 +1,41 @@
-// components/MultiIndexComparison.jsx - Comparación multi-índice
+// components/MultiIndexComparison.jsx - Comparación Multi-índice con Series Temporales
 import React, { useState, useRef } from "react";
-import { Grid3X3, Calendar, Activity, Layers, Eye, EyeOff } from "lucide-react";
+import {
+  Grid3X3,
+  Calendar,
+  Activity,
+  Layers,
+  Eye,
+  EyeOff,
+  Download,
+  Maximize2,
+} from "lucide-react";
+import { Chart } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+} from "chart.js";
 import MapView from "./MapView";
 import { COLORS, SHADOWS, ANIMATIONS, RADIUS } from "../styles/designTokens";
+
+// Registrar Chart.js
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
 
 // Configuración de API
 const RENDER_API_BASE_URL = "https://ndvi-api-service.onrender.com";
@@ -13,11 +46,20 @@ const API_BASE_URL =
     ? RENDER_API_BASE_URL
     : "http://localhost:5000";
 
+const S2_MIN_DATE = "2017-04";
+
 export default function MultiIndexComparison({ setCurrentApp }) {
-  const [date, setDate] = useState(() => {
-    const d = new Date();
-    return d.toISOString().slice(0, 10);
-  });
+  // Estado
+  const getCurrentYearMonth = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}`;
+  };
+
+  const [startMonth, setStartMonth] = useState("2023-01");
+  const [endMonth, setEndMonth] = useState(getCurrentYearMonth());
   const [selectedIndices, setSelectedIndices] = useState({
     NDVI: true,
     NBR: true,
@@ -25,18 +67,64 @@ export default function MultiIndexComparison({ setCurrentApp }) {
     MSI: false,
   });
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState(null);
+  const [timeseriesResults, setTimeseriesResults] = useState({});
   const [error, setError] = useState("");
   const [geometry, setGeometry] = useState(null);
-  const [visibleLayers, setVisibleLayers] = useState({});
+  const [chartExpanded, setChartExpanded] = useState(false);
   const mapRef = useRef(null);
+  const layersRef = useRef({});
 
   const indicesInfo = {
-    NDVI: { name: "NDVI", color: "#047857", description: "Vegetación" },
-    NBR: { name: "NBR", color: "#dc2626", description: "Áreas Quemadas" },
-    CIre: { name: "CIre", color: "#7c3aed", description: "Clorofila" },
-    MSI: { name: "MSI", color: "#1d4ed8", description: "Estrés Hídrico" },
+    NDVI: {
+      name: "NDVI",
+      color: "#047857",
+      description: "Vegetación",
+      min: -0.2,
+      max: 1.0,
+    },
+    NBR: {
+      name: "NBR",
+      color: "#f59e0b",
+      description: "Áreas Quemadas",
+      min: -0.5,
+      max: 1.0,
+    },
+    CIre: {
+      name: "CIre",
+      color: "#7c3aed",
+      description: "Clorofila",
+      min: 0,
+      max: 3.0,
+    },
+    MSI: {
+      name: "MSI",
+      color: "#dc2626",
+      description: "Estrés Hídrico",
+      min: 0,
+      max: 2.5,
+    },
   };
+
+  // Generar lista de meses
+  const generateMonths = () => {
+    const months = [];
+    const [startYear, startMonth] = S2_MIN_DATE.split("-").map(Number);
+    const now = new Date();
+    const endDate = new Date(now.getFullYear(), now.getMonth());
+
+    let current = new Date(startYear, startMonth - 1);
+
+    while (current <= endDate) {
+      const year = current.getFullYear();
+      const month = String(current.getMonth() + 1).padStart(2, "0");
+      months.push(`${year}-${month}`);
+      current.setMonth(current.getMonth() + 1);
+    }
+
+    return months;
+  };
+
+  const months = generateMonths();
 
   const handleCompare = async () => {
     if (!geometry) {
@@ -55,101 +143,376 @@ export default function MultiIndexComparison({ setCurrentApp }) {
 
     setLoading(true);
     setError("");
-    setResults(null);
+    setTimeseriesResults({});
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/indices/compare`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          geometry: geometry,
-          date: date,
-          indices: selectedList,
-        }),
+      // Llamar al endpoint de series temporales para cada índice seleccionado
+      const promises = selectedList.map(async (indexName) => {
+        const response = await fetch(`${API_BASE_URL}/api/timeseries/trend`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            geometry: geometry,
+            index: indexName,
+            start_month: startMonth,
+            end_month: endMonth,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.status === "success") {
+          return { indexName, data };
+        } else {
+          throw new Error(data.message || "Error al procesar");
+        }
       });
 
-      const data = await response.json();
+      const results = await Promise.all(promises);
 
-      if (data.status === "success") {
-        setResults(data);
+      // Organizar resultados por índice
+      const organizedResults = {};
+      results.forEach(({ indexName, data }) => {
+        organizedResults[indexName] = data;
+      });
 
-        // Inicializar todas las capas como visibles
-        const initialVisible = {};
-        selectedList.forEach((idx) => {
-          initialVisible[idx] = true;
+      setTimeseriesResults(organizedResults);
+
+      // Añadir capas al mapa (última imagen de cada índice)
+      if (mapRef.current && window.L) {
+        // Limpiar capas anteriores
+        Object.keys(layersRef.current).forEach((key) => {
+          const layer = layersRef.current[key];
+          if (layer && mapRef.current.hasLayer(layer)) {
+            mapRef.current.removeLayer(layer);
+          }
         });
-        setVisibleLayers(initialVisible);
+        layersRef.current = {};
 
-        // Añadir capas al mapa
-        if (mapRef.current) {
-          // Limpiar capas anteriores
-          const mapLayers = mapRef.current._layers;
-          Object.keys(mapLayers).forEach((key) => {
-            const layer = mapLayers[key];
-            if (
-              layer.options &&
-              layer.options.attribution &&
-              layer.options.attribution.startsWith("Index:")
-            ) {
-              mapRef.current.removeLayer(layer);
-            }
-          });
+        // Obtener última imagen para cada índice
+        for (const indexName of selectedList) {
+          try {
+            const lastDateResponse = await fetch(`${API_BASE_URL}/api/ndvi`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                geometry: geometry,
+                date: new Date().toISOString().slice(0, 10),
+                index: indexName,
+              }),
+            });
 
-          // Añadir nuevas capas
-          selectedList.forEach((idx, i) => {
-            if (data.results[idx]?.tile_url) {
-              window.L.tileLayer(data.results[idx].tile_url, {
-                attribution: `Index:${idx}`,
+            const lastDateData = await lastDateResponse.json();
+
+            if (lastDateData.status === "success" && lastDateData.tile_url) {
+              const tileLayer = window.L.tileLayer(lastDateData.tile_url, {
+                attribution: `Index:${indexName}`,
                 opacity: 0.7,
-              }).addTo(mapRef.current);
+                maxZoom: 18,
+                tileSize: 256,
+              });
+
+              tileLayer.addTo(mapRef.current);
+              layersRef.current[indexName] = tileLayer;
+
+              console.log(`✅ Capa ${indexName} añadida`);
             }
-          });
+          } catch (layerError) {
+            console.warn(`Error al añadir capa ${indexName}:`, layerError);
+          }
         }
-      } else {
-        setError(data.message || "Error al procesar");
       }
     } catch (err) {
       console.error("Error:", err);
-      setError("Error de conexión con el servidor");
+      setError(`Error de conexión: ${err.message}`);
     } finally {
       setLoading(false);
     }
   };
 
   const toggleLayerVisibility = (indexName) => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || !layersRef.current[indexName]) {
+      console.warn(`No se puede toggle capa ${indexName}`);
+      return;
+    }
 
-    const newVisible = {
-      ...visibleLayers,
-      [indexName]: !visibleLayers[indexName],
-    };
-    setVisibleLayers(newVisible);
-
-    // Toggle layer en el mapa
-    const mapLayers = mapRef.current._layers;
-    Object.keys(mapLayers).forEach((key) => {
-      const layer = mapLayers[key];
-      if (layer.options && layer.options.attribution === `Index:${indexName}`) {
-        if (newVisible[indexName]) {
-          layer.setOpacity(0.7);
-        } else {
-          layer.setOpacity(0);
-        }
-      }
-    });
+    const layer = layersRef.current[indexName];
+    if (layer) {
+      const currentOpacity = layer.options.opacity;
+      layer.setOpacity(currentOpacity > 0 ? 0 : 0.7);
+    }
   };
 
   const handleGeometrySelected = (newGeometry) => {
     setGeometry(newGeometry);
-    setResults(null);
+    setTimeseriesResults({});
     setError("");
   };
 
   const handleReset = () => {
+    // Limpiar capas del mapa
+    if (mapRef.current) {
+      Object.keys(layersRef.current).forEach((key) => {
+        const layer = layersRef.current[key];
+        if (layer && mapRef.current.hasLayer(layer)) {
+          mapRef.current.removeLayer(layer);
+        }
+      });
+      layersRef.current = {};
+    }
+
     setGeometry(null);
-    setResults(null);
+    setTimeseriesResults({});
     setError("");
-    setVisibleLayers({});
+  };
+
+  const downloadCSV = () => {
+    if (Object.keys(timeseriesResults).length === 0) return;
+
+    // Obtener todas las fechas únicas
+    const allDates = new Set();
+    Object.values(timeseriesResults).forEach((result) => {
+      result.timeseries.forEach((point) => allDates.add(point.date));
+    });
+
+    const sortedDates = Array.from(allDates).sort();
+
+    // Crear CSV con todas las series
+    const headers = ["Fecha", ...Object.keys(timeseriesResults)];
+    const rows = sortedDates.map((date) => {
+      const row = [date];
+      Object.keys(timeseriesResults).forEach((indexName) => {
+        const point = timeseriesResults[indexName].timeseries.find(
+          (p) => p.date === date
+        );
+        row.push(point?.mean?.toFixed(4) || "");
+      });
+      return row;
+    });
+
+    const csv = [headers, ...rows].map((row) => row.join(",")).join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `multi_index_comparison_${startMonth}_${endMonth}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
+  // Datos del gráfico combinado
+  const getChartData = () => {
+    if (Object.keys(timeseriesResults).length === 0) return null;
+
+    // Obtener todas las fechas únicas
+    const allDates = new Set();
+    Object.values(timeseriesResults).forEach((result) => {
+      result.timeseries.forEach((point) => allDates.add(point.date));
+    });
+
+    const sortedDates = Array.from(allDates).sort();
+
+    // Crear datasets para cada índice
+    const datasets = Object.keys(timeseriesResults).map((indexName) => {
+      const indexConfig = indicesInfo[indexName];
+      const timeseries = timeseriesResults[indexName].timeseries;
+
+      // Mapear valores a las fechas
+      const data = sortedDates.map((date) => {
+        const point = timeseries.find((p) => p.date === date);
+        return point?.mean || null;
+      });
+
+      return {
+        label: indexConfig.name,
+        data: data,
+        borderColor: indexConfig.color,
+        backgroundColor: `${indexConfig.color}20`,
+        borderWidth: 3,
+        tension: 0.3,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointBackgroundColor: indexConfig.color,
+        pointBorderColor: "#ffffff",
+        pointBorderWidth: 2,
+        fill: true,
+        yAxisID: indexName === "MSI" ? "y1" : "y", // MSI en eje derecho
+      };
+    });
+
+    return {
+      labels: sortedDates,
+      datasets: datasets,
+    };
+  };
+
+  const chartData = getChartData();
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: "index",
+      intersect: false,
+    },
+    plugins: {
+      legend: {
+        display: true,
+        position: "bottom",
+        labels: {
+          font: { size: 11, weight: "600" },
+          usePointStyle: true,
+          padding: 12,
+          generateLabels: (chart) => {
+            const datasets = chart.data.datasets;
+            return datasets.map((dataset, i) => ({
+              text: dataset.label,
+              fillStyle: dataset.borderColor,
+              strokeStyle: dataset.borderColor,
+              lineWidth: 3,
+              hidden: !chart.isDatasetVisible(i),
+              index: i,
+            }));
+          },
+        },
+      },
+      tooltip: {
+        backgroundColor: "#1c1917",
+        titleColor: "#ffffff",
+        bodyColor: "#ffffff",
+        borderColor: "#7c3aed",
+        borderWidth: 2,
+        padding: 12,
+        displayColors: true,
+        boxPadding: 6,
+        callbacks: {
+          title: (context) => `📅 ${context[0].label}`,
+          label: (context) => {
+            const label = context.dataset.label || "";
+            const value = context.parsed.y;
+            if (value !== null && value !== undefined) {
+              return `${label}: ${value.toFixed(4)}`;
+            }
+            return "";
+          },
+        },
+      },
+    },
+    scales: {
+      y: {
+        type: "linear",
+        position: "left",
+        ticks: {
+          color: "#57534e",
+          font: { size: 11, weight: "500" },
+        },
+        grid: { color: "#e7e5e4" },
+        title: {
+          display: true,
+          text: "NDVI / NBR / CIre",
+          color: "#1c1917",
+          font: { size: 12, weight: "600" },
+        },
+      },
+      y1: {
+        type: "linear",
+        position: "right",
+        display: Object.keys(timeseriesResults).includes("MSI"),
+        ticks: {
+          color: "#57534e",
+          font: { size: 11, weight: "500" },
+        },
+        grid: { display: false },
+        title: {
+          display: true,
+          text: "MSI",
+          color: "#dc2626",
+          font: { size: 12, weight: "600" },
+        },
+      },
+      x: {
+        ticks: {
+          color: "#57534e",
+          font: { size: 10, weight: "500" },
+          maxRotation: 45,
+          minRotation: 45,
+        },
+        grid: { color: "#f5f5f4" },
+      },
+    },
+  };
+
+  // Modal del gráfico expandido
+  const ChartModal = () => {
+    if (!chartExpanded || !chartData) return null;
+
+    return (
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0, 0, 0, 0.85)",
+          zIndex: 10000,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "40px",
+        }}
+        onClick={() => setChartExpanded(false)}
+      >
+        <div
+          style={{
+            background: "#ffffff",
+            borderRadius: RADIUS.LG,
+            padding: "30px",
+            maxWidth: "1400px",
+            width: "100%",
+            maxHeight: "90vh",
+            overflow: "auto",
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "20px",
+            }}
+          >
+            <h3 style={{ margin: 0, fontSize: "1.5rem", color: "#1c1917" }}>
+              Comparación Multi-índice - Serie Temporal
+            </h3>
+            <button
+              onClick={() => setChartExpanded(false)}
+              style={{
+                background: "transparent",
+                border: "none",
+                fontSize: "2rem",
+                cursor: "pointer",
+                color: "#57534e",
+                lineHeight: 1,
+              }}
+            >
+              ×
+            </button>
+          </div>
+          <div style={{ height: "650px" }}>
+            <Chart type="line" data={chartData} options={chartOptions} />
+          </div>
+        </div>
+      </div>
+    );
   };
 
   // Estilos
@@ -163,7 +526,7 @@ export default function MultiIndexComparison({ setCurrentApp }) {
   };
 
   const sidebarStyle = {
-    width: 400,
+    width: 420,
     padding: "28px 20px 28px 28px",
     background: "rgba(255, 255, 255, 0.9)",
     backdropFilter: "blur(12px)",
@@ -205,6 +568,19 @@ export default function MultiIndexComparison({ setCurrentApp }) {
     marginBottom: 12,
   };
 
+  const selectStyle = {
+    width: "100%",
+    padding: "12px 14px",
+    fontSize: "0.95rem",
+    border: "1px solid #e7e5e4",
+    borderRadius: RADIUS.MD,
+    background: "#ffffff",
+    color: "#1c1917",
+    outline: "none",
+    boxSizing: "border-box",
+    cursor: "pointer",
+  };
+
   const checkboxContainerStyle = {
     display: "flex",
     flexDirection: "column",
@@ -220,18 +596,6 @@ export default function MultiIndexComparison({ setCurrentApp }) {
     borderRadius: RADIUS.MD,
     cursor: "pointer",
     transition: ANIMATIONS.TRANSITION_BASE,
-  };
-
-  const inputStyle = {
-    width: "100%",
-    padding: "12px 14px",
-    fontSize: "0.95rem",
-    border: "1px solid #e7e5e4",
-    borderRadius: RADIUS.MD,
-    background: "#ffffff",
-    color: "#1c1917",
-    outline: "none",
-    boxSizing: "border-box",
   };
 
   const buttonStyle = {
@@ -269,6 +633,17 @@ export default function MultiIndexComparison({ setCurrentApp }) {
             <Grid3X3 size={32} color="#1d4ed8" />
             Comparación Multi-índice
           </h2>
+          <p
+            style={{
+              margin: 0,
+              fontSize: "0.85rem",
+              color: "#78716c",
+              marginTop: "-16px",
+              marginBottom: "24px",
+            }}
+          >
+            Series temporales comparadas
+          </p>
 
           <div style={sectionStyle}>
             <label style={labelStyle}>
@@ -276,15 +651,41 @@ export default function MultiIndexComparison({ setCurrentApp }) {
                 size={16}
                 style={{ display: "inline", marginRight: "5px" }}
               />
-              Fecha de Análisis
+              Periodo de Análisis
             </label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              max={new Date().toISOString().slice(0, 10)}
-              style={inputStyle}
-            />
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "10px",
+              }}
+            >
+              <select
+                value={startMonth}
+                onChange={(e) => setStartMonth(e.target.value)}
+                style={selectStyle}
+              >
+                {months.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={endMonth}
+                onChange={(e) => setEndMonth(e.target.value)}
+                style={selectStyle}
+              >
+                {months
+                  .slice()
+                  .reverse()
+                  .map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+              </select>
+            </div>
 
             <label style={{ ...labelStyle, marginTop: 16 }}>
               <Layers
@@ -374,7 +775,7 @@ export default function MultiIndexComparison({ setCurrentApp }) {
               ) : (
                 <>
                   <Grid3X3 size={20} />
-                  Comparar Índices
+                  Comparar Series Temporales
                 </>
               )}
             </button>
@@ -396,8 +797,74 @@ export default function MultiIndexComparison({ setCurrentApp }) {
             </div>
           )}
 
-          {results && (
+          {chartData && (
             <>
+              <div style={{ marginTop: 20 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 12,
+                  }}
+                >
+                  <h3
+                    style={{ fontSize: "1.1rem", color: "#1c1917", margin: 0 }}
+                  >
+                    📈 Series Temporales
+                  </h3>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button
+                      onClick={() => setChartExpanded(true)}
+                      style={{
+                        padding: "6px 12px",
+                        background: "transparent",
+                        border: "1px solid #e7e5e4",
+                        borderRadius: RADIUS.MD,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        fontSize: "0.85rem",
+                        color: "#57534e",
+                      }}
+                    >
+                      <Maximize2 size={16} />
+                      Expandir
+                    </button>
+                    <button
+                      onClick={downloadCSV}
+                      style={{
+                        padding: "6px 12px",
+                        background: "transparent",
+                        border: "1px solid #e7e5e4",
+                        borderRadius: RADIUS.MD,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        fontSize: "0.85rem",
+                        color: "#57534e",
+                      }}
+                    >
+                      <Download size={16} />
+                      CSV
+                    </button>
+                  </div>
+                </div>
+                <div
+                  style={{
+                    height: "280px",
+                    padding: "15px",
+                    background: "#ffffff",
+                    borderRadius: RADIUS.MD,
+                    border: "1px solid #e7e5e4",
+                  }}
+                >
+                  <Chart type="line" data={chartData} options={chartOptions} />
+                </div>
+              </div>
+
               {/* Control de Capas */}
               <div
                 style={{
@@ -419,7 +886,7 @@ export default function MultiIndexComparison({ setCurrentApp }) {
                   }}
                 >
                   <Layers size={18} />
-                  Control de Capas
+                  Control de Capas (Última fecha)
                 </h4>
                 <div
                   style={{
@@ -428,7 +895,7 @@ export default function MultiIndexComparison({ setCurrentApp }) {
                     gap: "8px",
                   }}
                 >
-                  {Object.keys(results.results).map((key) => (
+                  {Object.keys(timeseriesResults).map((key) => (
                     <div
                       key={key}
                       style={{
@@ -469,12 +936,10 @@ export default function MultiIndexComparison({ setCurrentApp }) {
                           padding: "4px",
                           display: "flex",
                           alignItems: "center",
-                          color: visibleLayers[key]
-                            ? indicesInfo[key].color
-                            : "#a8a29e",
+                          color: indicesInfo[key].color,
                         }}
                       >
-                        {visibleLayers[key] ? (
+                        {layersRef.current[key]?.options?.opacity > 0 ? (
                           <Eye size={18} />
                         ) : (
                           <EyeOff size={18} />
@@ -485,7 +950,7 @@ export default function MultiIndexComparison({ setCurrentApp }) {
                 </div>
               </div>
 
-              {/* Resultados */}
+              {/* Resumen Estadístico */}
               <div
                 style={{
                   marginTop: 20,
@@ -502,57 +967,120 @@ export default function MultiIndexComparison({ setCurrentApp }) {
                     color: "#1c1917",
                   }}
                 >
-                  📊 Valores Calculados
+                  📊 Resumen por Índice
                 </h4>
                 <div style={{ fontSize: "0.9rem" }}>
-                  {Object.keys(results.results).map((key) => (
-                    <div
-                      key={key}
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        padding: "10px",
-                        marginBottom: 8,
-                        background: `${indicesInfo[key].color}10`,
-                        borderRadius: RADIUS.SM,
-                        border: `1px solid ${indicesInfo[key].color}30`,
-                      }}
-                    >
-                      <span
+                  {Object.keys(timeseriesResults).map((key) => {
+                    const values = timeseriesResults[key].timeseries
+                      .map((p) => p.mean)
+                      .filter((v) => v !== null);
+                    const mean =
+                      values.length > 0
+                        ? values.reduce((a, b) => a + b, 0) / values.length
+                        : null;
+                    const min = values.length > 0 ? Math.min(...values) : null;
+                    const max = values.length > 0 ? Math.max(...values) : null;
+
+                    return (
+                      <div
+                        key={key}
                         style={{
-                          fontWeight: "600",
-                          color: indicesInfo[key].color,
+                          padding: "12px",
+                          marginBottom: 10,
+                          background: `${indicesInfo[key].color}10`,
+                          borderRadius: RADIUS.SM,
+                          border: `1px solid ${indicesInfo[key].color}30`,
                         }}
                       >
-                        {key}:
-                      </span>
-                      <span style={{ fontWeight: "700", color: "#1c1917" }}>
-                        {results.results[key].mean?.toFixed(4) || "N/A"}
-                      </span>
-                    </div>
-                  ))}
+                        <div
+                          style={{
+                            fontWeight: "700",
+                            color: indicesInfo[key].color,
+                            marginBottom: 6,
+                          }}
+                        >
+                          {key} - {indicesInfo[key].description}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "0.85rem",
+                            color: "#57534e",
+                            lineHeight: 1.6,
+                          }}
+                        >
+                          <div>
+                            <strong>Media:</strong>{" "}
+                            {mean !== null ? mean.toFixed(4) : "N/A"}
+                          </div>
+                          <div>
+                            <strong>Rango:</strong>{" "}
+                            {min !== null && max !== null
+                              ? `${min.toFixed(4)} a ${max.toFixed(4)}`
+                              : "N/A"}
+                          </div>
+                          <div>
+                            <strong>Puntos:</strong> {values.length} meses
+                          </div>
+                          <div>
+                            <strong>Imágenes:</strong>{" "}
+                            {timeseriesResults[key].images_found || 0}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Info */}
-              <div
-                style={{
-                  marginTop: 20,
-                  padding: 16,
-                  background: "rgba(250, 250, 249, 0.8)",
-                  borderRadius: RADIUS.MD,
-                  border: "1px solid #e7e5e4",
-                  fontSize: "0.9rem",
-                  color: "#57534e",
-                }}
-              >
-                <div style={{ marginBottom: 8 }}>
-                  <strong>Fecha de imagen:</strong> {results.image_date}
+              {/* Información del Área */}
+              {Object.keys(timeseriesResults).length > 0 && (
+                <div
+                  style={{
+                    marginTop: 20,
+                    padding: 16,
+                    background: "rgba(250, 250, 249, 0.8)",
+                    borderRadius: RADIUS.MD,
+                    border: "1px solid #e7e5e4",
+                    fontSize: "0.9rem",
+                    color: "#57534e",
+                  }}
+                >
+                  <h4
+                    style={{
+                      fontSize: "1rem",
+                      margin: "0 0 12px 0",
+                      color: "#1c1917",
+                    }}
+                  >
+                    📍 Información del Área
+                  </h4>
+                  {Object.values(timeseriesResults)[0].geometry && (
+                    <>
+                      <div style={{ marginBottom: 6 }}>
+                        <strong>Área:</strong>{" "}
+                        {Object.values(timeseriesResults)[0].geometry.area_ha}{" "}
+                        ha (
+                        {Object.values(timeseriesResults)[0].geometry.area_km2}{" "}
+                        km²)
+                      </div>
+                      <div>
+                        <strong>Periodo:</strong> {startMonth} a {endMonth}
+                      </div>
+                    </>
+                  )}
+                  {!Object.values(timeseriesResults)[0].geometry && (
+                    <>
+                      <div style={{ marginBottom: 6 }}>
+                        <strong>Área:</strong>{" "}
+                        {Object.values(timeseriesResults)[0].area_km2} km²
+                      </div>
+                      <div>
+                        <strong>Periodo:</strong> {startMonth} a {endMonth}
+                      </div>
+                    </>
+                  )}
                 </div>
-                <div>
-                  <strong>Imágenes procesadas:</strong> {results.images_found}
-                </div>
-              </div>
+              )}
             </>
           )}
         </div>
@@ -565,6 +1093,8 @@ export default function MultiIndexComparison({ setCurrentApp }) {
           ref={mapRef}
         />
       </div>
+
+      <ChartModal />
 
       <style>{`
         .spin {

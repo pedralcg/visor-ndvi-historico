@@ -5,9 +5,12 @@ import HomePage from "./components/HomePage.jsx";
 import NdviApp from "./components/NdviApp.jsx";
 import TimeSeriesTrendApp from "./components/TimeSeriesTrendApp.jsx";
 import ThresholdAnalysisApp from "./components/ThresholdAnalysisApp.jsx";
+import ThresholdCalculatorApp from "./components/ThresholdCalculatorApp.jsx";
 import MultiIndexComparison from "./components/MultiIndexComparison.jsx";
+import ChangeDetectionApp from "./components/ChangeDetectionApp.jsx";
+import CompositorApp from "./components/CompositorApp.jsx";
 import Navbar from "./components/Navbar.jsx";
-import TestApp from "./components/TestApp.jsx";
+// import TestApp from "./components/TestApp.jsx";
 import ContactoApp from "./components/ContactoApp.jsx";
 import { COLORS, TYPOGRAPHY } from "./styles/designTokens.js";
 
@@ -28,6 +31,9 @@ export default function App() {
 
   const renderApp = () => {
     switch (currentApp) {
+      case "compositor":
+        return <CompositorApp setCurrentApp={setCurrentApp} />;
+
       case "ndvi":
         return <NdviApp setCurrentApp={setCurrentApp} />;
 
@@ -37,15 +43,21 @@ export default function App() {
       case "thresholds":
         return <ThresholdAnalysisApp setCurrentApp={setCurrentApp} />;
 
+      case "thresholds-calculator":
+        return <ThresholdCalculatorApp setCurrentApp={setCurrentApp} />;
+
+      case "change-detection":
+        return <ChangeDetectionApp setCurrentApp={setCurrentApp} />;
+
       case "multiindex":
         return <MultiIndexComparison setCurrentApp={setCurrentApp} />;
 
-      case "test":
-        return (
-          <div style={centeredWrapperStyle}>
-            <TestApp setCurrentApp={setCurrentApp} />
-          </div>
-        );
+      // case "test":
+      //   return (
+      //     <div style={centeredWrapperStyle}>
+      //       <TestApp setCurrentApp={setCurrentApp} />
+      //     </div>
+      //   );
 
       case "contact":
         return (

@@ -1,4 +1,4 @@
-// components/TimeSeriesTrendApp.jsx - Análisis temporal con tendencias
+// components/TimeSeriesTrendApp.jsx - Series Temporales COMPLETO CORREGIDO
 import React, { useState, useRef } from "react";
 import {
   TrendingUp,
@@ -6,8 +6,21 @@ import {
   Activity,
   Download,
   AlertTriangle,
+  Maximize2,
 } from "lucide-react";
-import { Line } from "react-chartjs-2";
+import { Chart } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+} from "chart.js";
 import MapView from "./MapView";
 import {
   COLORS,
@@ -16,6 +29,19 @@ import {
   ANIMATIONS,
   RADIUS,
 } from "../styles/designTokens";
+
+// Registrar plugins de Chart.js
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
 
 // Configuración de API
 const RENDER_API_BASE_URL = "https://ndvi-api-service.onrender.com";
@@ -26,32 +52,130 @@ const API_BASE_URL =
     ? RENDER_API_BASE_URL
     : "http://localhost:5000";
 
+// Fecha mínima de Sentinel-2
+const S2_MIN_DATE = "2017-04";
+
 export default function TimeSeriesTrendApp({ setCurrentApp }) {
+  // Función auxiliar para obtener el mes actual
+  const getCurrentYearMonth = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}`;
+  };
+
   const [formData, setFormData] = useState({
     index: "NDVI",
     startMonth: "2023-01",
-    endMonth: "2025-10",
+    endMonth: getCurrentYearMonth(),
   });
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState("");
   const [geometry, setGeometry] = useState(null);
+  const [slopeTileLayer, setSlopeTileLayer] = useState(null);
+  const [chartExpanded, setChartExpanded] = useState(false);
   const mapRef = useRef(null);
 
-  // Generar lista de meses (últimos 3 años)
+  // Generar lista de meses desde S2_MIN_DATE hasta hoy
   const generateMonths = () => {
     const months = [];
+    const [startYear, startMonth] = S2_MIN_DATE.split("-").map(Number);
     const now = new Date();
-    for (let i = 36; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
+    const endDate = new Date(now.getFullYear(), now.getMonth());
+
+    let current = new Date(startYear, startMonth - 1);
+
+    while (current <= endDate) {
+      const year = current.getFullYear();
+      const month = String(current.getMonth() + 1).padStart(2, "0");
       months.push(`${year}-${month}`);
+      current.setMonth(current.getMonth() + 1);
     }
+
     return months;
   };
 
   const months = generateMonths();
+
+  // Definir leyendas de PENDIENTE (slope) para cada índice
+  const getSlopeLegendHTML = (indexName) => {
+    const legends = {
+      NDVI: `
+        <h4 style="margin-bottom:8px; font-size:14px; color:#1c1917; font-weight: 700;">
+          Pendiente NDVI (año⁻¹)
+        </h4>
+        <div style="line-height:20px; font-size:12px; font-weight: 500; color: #57534e;">
+          <i style="background:#dc2626; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px;"></i> ≤ -0.05 (Degradación rápida)<br>
+          <i style="background:#f59e0b; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px;"></i> -0.05 a -0.02 (Degradación leve)<br>
+          <i style="background:#ffffff; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px; border: 1px solid #e7e5e4;"></i> -0.02 a 0.02 (Estable)<br>
+          <i style="background:#a3e635; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px;"></i> 0.02 a 0.05 (Mejora leve)<br>
+          <i style="background:#047857; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px;"></i> ≥ 0.05 (Mejora rápida)
+        </div>
+      `,
+      NBR: `
+        <h4 style="margin-bottom:8px; font-size:14px; color:#1c1917; font-weight: 700;">
+          Pendiente NBR (año⁻¹)
+        </h4>
+        <div style="line-height:20px; font-size:12px; font-weight: 500; color: #57534e;">
+          <i style="background:#dc2626; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px;"></i> ≤ -0.05 (Mayor daño)<br>
+          <i style="background:#f59e0b; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px;"></i> -0.05 a -0.02 (Daño moderado)<br>
+          <i style="background:#ffffff; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px; border: 1px solid #e7e5e4;"></i> -0.02 a 0.02 (Estable)<br>
+          <i style="background:#a3e635; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px;"></i> 0.02 a 0.05 (Recuperación leve)<br>
+          <i style="background:#047857; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px;"></i> ≥ 0.05 (Recuperación rápida)
+        </div>
+      `,
+      CIre: `
+        <h4 style="margin-bottom:8px; font-size:14px; color:#1c1917; font-weight: 700;">
+          Pendiente CIre (año⁻¹)
+        </h4>
+        <div style="line-height:20px; font-size:12px; font-weight: 500; color: #57534e;">
+          <i style="background:#dc2626; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px;"></i> ≤ -0.05 (Pérdida clorofila)<br>
+          <i style="background:#f59e0b; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px;"></i> -0.05 a -0.02 (Reducción leve)<br>
+          <i style="background:#ffffff; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px; border: 1px solid #e7e5e4;"></i> -0.02 a 0.02 (Estable)<br>
+          <i style="background:#a3e635; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px;"></i> 0.02 a 0.05 (Aumento leve)<br>
+          <i style="background:#047857; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px;"></i> ≥ 0.05 (Aumento rápido)
+        </div>
+      `,
+      MSI: `
+        <h4 style="margin-bottom:8px; font-size:14px; color:#1c1917; font-weight: 700;">
+          Pendiente MSI (año⁻¹)
+        </h4>
+        <div style="line-height:20px; font-size:12px; font-weight: 500; color: #57534e;">
+          <i style="background:#047857; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px;"></i> ≤ -0.05 (Menos estrés)<br>
+          <i style="background:#a3e635; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px;"></i> -0.05 a -0.02 (Mejora leve)<br>
+          <i style="background:#ffffff; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px; border: 1px solid #e7e5e4;"></i> -0.02 a 0.02 (Estable)<br>
+          <i style="background:#f59e0b; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px;"></i> 0.02 a 0.05 (Más estrés)<br>
+          <i style="background:#dc2626; display:inline-block; width:18px; height:10px; float:left; margin-right:8px; border-radius: 2px;"></i> ≥ 0.05 (Estrés severo)
+        </div>
+      `,
+    };
+    return legends[indexName] || legends.NDVI;
+  };
+
+  // Manejar cambio de índice
+  const handleIndexChange = (newIndex) => {
+    setFormData({ ...formData, index: newIndex });
+    setResults(null);
+    setError("");
+
+    // Limpiar capa anterior
+    if (slopeTileLayer && mapRef.current) {
+      const map = mapRef.current.getMap();
+      const layersControl = mapRef.current.getLayersControl();
+
+      if (map && layersControl) {
+        try {
+          layersControl.removeLayer(slopeTileLayer);
+          map.removeLayer(slopeTileLayer);
+        } catch (e) {
+          console.warn("Error al limpiar capa:", e);
+        }
+      }
+      setSlopeTileLayer(null);
+    }
+  };
 
   const handleAnalysis = async () => {
     if (!geometry) {
@@ -81,21 +205,45 @@ export default function TimeSeriesTrendApp({ setCurrentApp }) {
         setResults(data);
 
         // Añadir capa de pendiente al mapa
-        if (mapRef.current && data.slope_tile_url) {
-          // Limpiar capas anteriores
-          const mapLayers = mapRef.current._layers;
-          Object.keys(mapLayers).forEach((key) => {
-            const layer = mapLayers[key];
-            if (layer.options && layer.options.attribution === "Pendiente") {
-              mapRef.current.removeLayer(layer);
-            }
-          });
+        if (data.slope_tile_url && mapRef.current) {
+          const map = mapRef.current.getMap();
+          const layersControl = mapRef.current.getLayersControl();
 
-          // Agregar nueva capa de pendiente
-          window.L.tileLayer(data.slope_tile_url, {
-            attribution: "Pendiente",
-            opacity: 0.7,
-          }).addTo(mapRef.current);
+          if (map && layersControl && window.L) {
+            const L = window.L;
+
+            // Remover capa anterior si existe
+            if (slopeTileLayer) {
+              try {
+                layersControl.removeLayer(slopeTileLayer);
+                map.removeLayer(slopeTileLayer);
+              } catch (e) {
+                console.warn("Error removiendo capa anterior:", e);
+              }
+            }
+
+            // Crear nueva capa de pendientes
+            const newLayer = L.tileLayer(data.slope_tile_url, {
+              opacity: 0.7,
+              attribution: "Slope Layer",
+            });
+
+            // Añadir al mapa
+            newLayer.addTo(map);
+
+            // Añadir al control de capas como overlay
+            const layerName = `📊 Pendiente ${formData.index}`;
+            layersControl.addOverlay(newLayer, layerName);
+
+            setSlopeTileLayer(newLayer);
+
+            // Actualizar leyenda del mapa con la leyenda de PENDIENTES
+            if (mapRef.current.updateLegend) {
+              mapRef.current.updateLegend({
+                html: getSlopeLegendHTML(formData.index),
+              });
+            }
+          }
         }
       } else {
         setError(data.message || "Error al procesar la solicitud");
@@ -118,6 +266,22 @@ export default function TimeSeriesTrendApp({ setCurrentApp }) {
     setGeometry(null);
     setResults(null);
     setError("");
+
+    // Limpiar capa de pendiente
+    if (slopeTileLayer && mapRef.current) {
+      const map = mapRef.current.getMap();
+      const layersControl = mapRef.current.getLayersControl();
+
+      if (map && layersControl) {
+        try {
+          layersControl.removeLayer(slopeTileLayer);
+          map.removeLayer(slopeTileLayer);
+        } catch (e) {
+          console.warn("Error al limpiar capa:", e);
+        }
+      }
+      setSlopeTileLayer(null);
+    }
   };
 
   const downloadCSV = () => {
@@ -127,19 +291,22 @@ export default function TimeSeriesTrendApp({ setCurrentApp }) {
       ["Fecha", formData.index, "Delta"],
       ...results.timeseries.map((point) => [
         point.date,
-        point.mean,
-        point.delta,
+        point.mean || "",
+        point.delta || "",
       ]),
     ]
       .map((row) => row.join(","))
       .join("\n");
 
-    const blob = new Blob([csv], { type: "text/csv" });
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = `timeseries_${formData.index}_${formData.startMonth}_${formData.endMonth}.csv`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
   };
 
   // Estilos
@@ -147,7 +314,9 @@ export default function TimeSeriesTrendApp({ setCurrentApp }) {
     display: "flex",
     height: "100%",
     width: "100%",
-    fontFamily: TYPOGRAPHY.FONT_FAMILY,
+    fontFamily:
+      TYPOGRAPHY?.FONT_FAMILY ||
+      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     background:
       "linear-gradient(135deg, #fafaf9 0%, #f5f5f4 50%, #fafaf9 100%)",
     overflow: "hidden",
@@ -232,11 +401,38 @@ export default function TimeSeriesTrendApp({ setCurrentApp }) {
     marginTop: 20,
   };
 
+  // Datos del gráfico COMBO (línea + barras)
   const chartData = results?.timeseries
     ? {
         labels: results.timeseries.map((p) => p.date),
         datasets: [
+          // Barras de delta negativo (rojo)
           {
+            type: "bar",
+            label: "Δ Decreciente",
+            data: results.timeseries.map((p) =>
+              p.delta !== null && p.delta < 0 ? p.delta : null
+            ),
+            backgroundColor: "rgba(220, 38, 38, 0.7)",
+            borderColor: "#dc2626",
+            borderWidth: 1,
+            yAxisID: "y1",
+          },
+          // Barras de delta positivo (verde)
+          {
+            type: "bar",
+            label: "Δ Creciente",
+            data: results.timeseries.map((p) =>
+              p.delta !== null && p.delta > 0 ? p.delta : null
+            ),
+            backgroundColor: "rgba(4, 120, 87, 0.7)",
+            borderColor: "#047857",
+            borderWidth: 1,
+            yAxisID: "y1",
+          },
+          // Línea del índice
+          {
+            type: "line",
             label: formData.index,
             data: results.timeseries.map((p) => p.mean),
             borderColor: "#7c3aed",
@@ -249,6 +445,7 @@ export default function TimeSeriesTrendApp({ setCurrentApp }) {
             pointBorderColor: "#ffffff",
             pointBorderWidth: 2,
             fill: true,
+            yAxisID: "y",
           },
         ],
       }
@@ -257,8 +454,20 @@ export default function TimeSeriesTrendApp({ setCurrentApp }) {
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: {
+      mode: "index",
+      intersect: false,
+    },
     plugins: {
-      legend: { display: false },
+      legend: {
+        display: true,
+        position: "bottom",
+        labels: {
+          font: { size: 11 },
+          usePointStyle: true,
+          padding: 15,
+        },
+      },
       tooltip: {
         backgroundColor: "#1c1917",
         titleColor: "#ffffff",
@@ -268,17 +477,20 @@ export default function TimeSeriesTrendApp({ setCurrentApp }) {
         padding: 12,
         callbacks: {
           label: (context) => {
-            const point = results.timeseries[context.dataIndex];
-            return [
-              `${formData.index}: ${point.mean?.toFixed(4) || "N/A"}`,
-              `Δ: ${point.delta?.toFixed(4) || "N/A"}`,
-            ];
+            const label = context.dataset.label || "";
+            const value = context.parsed.y;
+            if (value !== null && value !== undefined) {
+              return `${label}: ${value.toFixed(4)}`;
+            }
+            return "";
           },
         },
       },
     },
     scales: {
       y: {
+        type: "linear",
+        position: "left",
         ticks: { color: "#57534e", font: { size: 12, weight: "500" } },
         grid: { color: "#e7e5e4" },
         title: {
@@ -286,6 +498,18 @@ export default function TimeSeriesTrendApp({ setCurrentApp }) {
           text: formData.index,
           color: "#1c1917",
           font: { size: 13, weight: "600" },
+        },
+      },
+      y1: {
+        type: "linear",
+        position: "right",
+        ticks: { color: "#57534e", font: { size: 11 } },
+        grid: { display: false },
+        title: {
+          display: true,
+          text: `Δ ${formData.index}`,
+          color: "#1c1917",
+          font: { size: 12, weight: "600" },
         },
       },
       x: {
@@ -300,14 +524,90 @@ export default function TimeSeriesTrendApp({ setCurrentApp }) {
     },
   };
 
+  // Modal del gráfico expandido
+  const ChartModal = () => {
+    if (!chartExpanded) return null;
+
+    return (
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0, 0, 0, 0.8)",
+          zIndex: 10000,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "40px",
+        }}
+        onClick={() => setChartExpanded(false)}
+      >
+        <div
+          style={{
+            background: "#ffffff",
+            borderRadius: RADIUS.LG,
+            padding: "30px",
+            maxWidth: "1200px",
+            width: "100%",
+            maxHeight: "90vh",
+            overflow: "auto",
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "20px",
+            }}
+          >
+            <h3 style={{ margin: 0, fontSize: "1.5rem", color: "#1c1917" }}>
+              Serie Temporal - {formData.index}
+            </h3>
+            <button
+              onClick={() => setChartExpanded(false)}
+              style={{
+                background: "transparent",
+                border: "none",
+                fontSize: "2rem",
+                cursor: "pointer",
+                color: "#57534e",
+              }}
+            >
+              ×
+            </button>
+          </div>
+          <div style={{ height: "600px" }}>
+            <Chart type="bar" data={chartData} options={chartOptions} />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div style={containerStyle}>
       <aside style={sidebarStyle}>
         <div style={{ paddingBottom: "20px" }}>
           <h2 style={headerStyle}>
             <TrendingUp size={32} color="#7c3aed" />
-            Series Temporales
+            Series Temporales con Tendencia
           </h2>
+          <p
+            style={{
+              margin: 0,
+              fontSize: "0.85rem",
+              color: "#78716c",
+              marginTop: "-16px",
+              marginBottom: "24px",
+            }}
+          >
+            Análisis de tendencias
+          </p>
 
           <div style={sectionStyle}>
             <label style={labelStyle}>
@@ -319,9 +619,7 @@ export default function TimeSeriesTrendApp({ setCurrentApp }) {
             </label>
             <select
               value={formData.index}
-              onChange={(e) =>
-                setFormData({ ...formData, index: e.target.value })
-              }
+              onChange={(e) => handleIndexChange(e.target.value)}
               style={selectStyle}
             >
               <option value="NDVI">NDVI - Vegetación</option>
@@ -443,37 +741,57 @@ export default function TimeSeriesTrendApp({ setCurrentApp }) {
                       margin: 0,
                     }}
                   >
-                    📈 Gráfico Temporal
+                    📈 {formData.index} + Δ Mensual
                   </h3>
-                  <button
-                    onClick={downloadCSV}
-                    style={{
-                      padding: "6px 12px",
-                      background: "transparent",
-                      border: "1px solid #e7e5e4",
-                      borderRadius: RADIUS.MD,
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      fontSize: "0.85rem",
-                      color: "#57534e",
-                    }}
-                  >
-                    <Download size={16} />
-                    CSV
-                  </button>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button
+                      onClick={() => setChartExpanded(true)}
+                      style={{
+                        padding: "6px 12px",
+                        background: "transparent",
+                        border: "1px solid #e7e5e4",
+                        borderRadius: RADIUS.MD,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        fontSize: "0.85rem",
+                        color: "#57534e",
+                      }}
+                    >
+                      <Maximize2 size={16} />
+                      Expandir
+                    </button>
+                    <button
+                      onClick={downloadCSV}
+                      style={{
+                        padding: "6px 12px",
+                        background: "transparent",
+                        border: "1px solid #e7e5e4",
+                        borderRadius: RADIUS.MD,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        fontSize: "0.85rem",
+                        color: "#57534e",
+                      }}
+                    >
+                      <Download size={16} />
+                      CSV
+                    </button>
+                  </div>
                 </div>
                 <div
                   style={{
-                    height: "220px",
+                    height: "240px",
                     padding: "15px",
                     background: "#ffffff",
                     borderRadius: RADIUS.MD,
                     border: "1px solid #e7e5e4",
                   }}
                 >
-                  <Line data={chartData} options={chartOptions} />
+                  <Chart type="bar" data={chartData} options={chartOptions} />
                 </div>
               </div>
 
@@ -495,26 +813,46 @@ export default function TimeSeriesTrendApp({ setCurrentApp }) {
                 >
                   📊 Estadísticas de Tendencia
                 </h4>
-                <div style={{ fontSize: "0.9rem", color: "#57534e" }}>
+                <div
+                  style={{
+                    fontSize: "0.9rem",
+                    color: "#57534e",
+                    lineHeight: "1.8",
+                  }}
+                >
                   <div style={{ marginBottom: 8 }}>
                     <strong>Pendiente media:</strong>{" "}
                     <span
                       style={{
                         color:
-                          results.slope_stats.mean > 0 ? "#047857" : "#dc2626",
+                          results.slope_stats?.mean > 0 ? "#047857" : "#dc2626",
                         fontWeight: "700",
                       }}
                     >
-                      {results.slope_stats.mean?.toFixed(5) || "N/A"} / año
+                      {results.slope_stats?.mean?.toFixed(5) || "N/A"} año⁻¹
                     </span>
                   </div>
                   <div style={{ marginBottom: 8 }}>
                     <strong>Rango:</strong>{" "}
-                    {results.slope_stats.min?.toFixed(5)} a{" "}
-                    {results.slope_stats.max?.toFixed(5)}
+                    {results.slope_stats?.min?.toFixed(5) || "N/A"} a{" "}
+                    {results.slope_stats?.max?.toFixed(5) || "N/A"}
                   </div>
-                  <div>
-                    <strong>Imágenes procesadas:</strong> {results.images_found}
+                  <div style={{ marginBottom: 8 }}>
+                    <strong>Imágenes procesadas:</strong>{" "}
+                    {results.images_found || 0}
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 12,
+                      paddingTop: 12,
+                      borderTop: "1px solid #e7e5e4",
+                      fontSize: "0.85rem",
+                      color: "#78716c",
+                    }}
+                  >
+                    ℹ️ El índice mensual se calcula promediando todas las
+                    imágenes válidas del mes (sin nubes excesivas y con píxeles
+                    no enmascarados).
                   </div>
                 </div>
               </div>
@@ -530,6 +868,8 @@ export default function TimeSeriesTrendApp({ setCurrentApp }) {
           ref={mapRef}
         />
       </div>
+
+      <ChartModal />
 
       <style>{`
         .spin {

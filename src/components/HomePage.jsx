@@ -1,7 +1,16 @@
 // components/HomePage.jsx - Diseño moderno con temática ambiental/satelital
 
 import React from "react";
-import { Globe, Satellite, Zap, TrendingUp, Grid3X3 } from "lucide-react";
+import {
+  AlertTriangle,
+  Calculator,
+  Satellite,
+  Zap,
+  TrendingUp,
+  Grid3X3,
+  Image,
+  GitCompare,
+} from "lucide-react";
 import AppCard from "./AppCard.jsx";
 import { COLORS, TYPOGRAPHY } from "../styles/designTokens";
 
@@ -184,10 +193,17 @@ const HomePage = ({ setCurrentApp }) => {
 
   const applications = [
     {
+      key: "compositor",
+      title: "Composiciones de Imagenes Sentinel 2",
+      description: "Composiciones espectrales e índices para análisis rápido.",
+      icon: Image,
+      color: "#047857",
+    },
+    {
       key: "ndvi",
-      title: "Visor NDVI Sentinel-2",
+      title: "Análisis Espectral",
       description:
-        "Calcula y visualiza series temporales del Índice de Vegetación con imágenes satelitales Sentinel-2. Análisis multitemporal de cobertura vegetal.",
+        "Calcula, visualiza y descarga Índices Espectrales con imágenes satelitales Sentinel-2.",
       icon: Satellite,
       color: "#047857",
     },
@@ -204,8 +220,24 @@ const HomePage = ({ setCurrentApp }) => {
       title: "Análisis con Umbrales de Alerta",
       description:
         "Monitoreo temporal con umbrales de alerta automáticos. Detecta degradación, estrés hídrico y cambios anómalos en la vegetación.",
-      icon: Grid3X3,
+      icon: AlertTriangle,
       color: "#ea580c",
+    },
+    {
+      key: "thresholds-calculator",
+      title: "Calculadora de Umbrales",
+      description:
+        "Calcula umbrales óptimos basados en análisis histórico estadístico.",
+      icon: Calculator,
+      color: "#3b82f6",
+    },
+    {
+      key: "change-detection",
+      title: "Detección de Cambio",
+      description:
+        "Visualiza diferencias espaciales entre dos periodos temporales.",
+      icon: GitCompare,
+      color: "#8b5cf6",
     },
     {
       key: "multiindex",
@@ -215,22 +247,22 @@ const HomePage = ({ setCurrentApp }) => {
       icon: Zap,
       color: "#1d4ed8",
     },
-    {
-      key: "test",
-      title: "Geo-Backend Services",
-      description:
-        "Entorno de desarrollo para verificación de conectividad y funcionalidades del API. Diagnóstico del estado del sistema geoserver.",
-      icon: Zap,
-      color: "#1d4ed8",
-    },
-    {
-      key: "future",
-      title: "Análisis de Tendencias",
-      description:
-        "Herramienta predictiva para analizar tendencias multianuales en cobertura terrestre y salud de ecosistemas mediante machine learning.",
-      icon: TrendingUp,
-      color: "#7c3aed",
-    },
+    // {
+    //   key: "test",
+    //   title: "Geo-Backend Services",
+    //   description:
+    //     "Entorno de desarrollo para verificación de conectividad y funcionalidades del API. Diagnóstico del estado del sistema geoserver.",
+    //   icon: Zap,
+    //   color: "#1d4ed8",
+    // },
+    // {
+    //   key: "future",
+    //   title: "Análisis de Tendencias",
+    //   description:
+    //     "Herramienta predictiva para analizar tendencias multianuales en cobertura terrestre y salud de ecosistemas mediante machine learning.",
+    //   icon: TrendingUp,
+    //   color: "#7c3aed",
+    // },
   ];
 
   return (
@@ -258,7 +290,7 @@ const HomePage = ({ setCurrentApp }) => {
             <p style={infoTextStyle}>
               Powered by
               <span style={techBadgeStyle}>React</span>
-              <span style={techBadgeStyle}>RESTful APIs</span>
+              <span style={techBadgeStyle}>Google Earth Engine</span>
               <span style={techBadgeStyle}>Sentinel-2</span>
             </p>
           </header>
