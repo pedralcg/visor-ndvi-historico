@@ -33,6 +33,8 @@ import {
   RADIUS,
 } from "../styles/designTokens";
 
+import { ndviService } from "../services/api";
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -44,14 +46,6 @@ ChartJS.register(
   Legend,
   Filler
 );
-
-const RENDER_API_BASE_URL = "https://ndvi-api-service.onrender.com";
-const FORCE_RENDER_API_LOCAL_TEST = true;
-
-const API_BASE_URL =
-  FORCE_RENDER_API_LOCAL_TEST === true || process.env.NODE_ENV === "production"
-    ? RENDER_API_BASE_URL
-    : "http://localhost:5000";
 
 const S2_MIN_DATE = "2017-04";
 
@@ -133,19 +127,15 @@ export default function ThresholdCalculatorApp({ setCurrentApp }) {
     setResults(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/thresholds/calculate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          geometry: geometry,
-          index: formData.index,
-          start_month: formData.startMonth,
-          end_month: formData.endMonth,
-          method: formData.method,
-        }),
+      const response = await ndviService.calculateThresholds({
+        geometry: geometry,
+        index: formData.index,
+        start_month: formData.startMonth,
+        end_month: formData.endMonth,
+        method: formData.method,
       });
 
-      const data = await response.json();
+      const data = response.data;
 
       if (data.status === "success") {
         setResults(data);
@@ -154,7 +144,9 @@ export default function ThresholdCalculatorApp({ setCurrentApp }) {
       }
     } catch (err) {
       console.error("Error:", err);
-      setError("Error de conexión con el servidor");
+      setError(
+        err.response?.data?.message || "Error de conexión con el servidor"
+      );
     } finally {
       setLoading(false);
     }

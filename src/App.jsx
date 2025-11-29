@@ -10,12 +10,17 @@ import MultiIndexComparison from "./components/MultiIndexComparison.jsx";
 import ChangeDetectionApp from "./components/ChangeDetectionApp.jsx";
 import CompositorApp from "./components/CompositorApp.jsx";
 import Navbar from "./components/Navbar.jsx";
+import BackendStatusIndicator from "./components/BackendStatusIndicator.jsx";
 // import TestApp from "./components/TestApp.jsx";
 import ContactoApp from "./components/ContactoApp.jsx";
 import { COLORS, TYPOGRAPHY } from "./styles/designTokens.js";
 
 export default function App() {
   const [currentApp, setCurrentApp] = useState("home");
+  const [backendStatus, setBackendStatus] = useState("checking");
+
+  // Obtener API URL desde el servicio
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5001";
 
   const centeredWrapperStyle = {
     flex: 1,
@@ -83,6 +88,10 @@ export default function App() {
 
   return (
     <div className="app-container" style={mainAppStyle}>
+      <BackendStatusIndicator
+        apiUrl={API_URL}
+        onStatusChange={setBackendStatus}
+      />
       <Navbar setCurrentApp={setCurrentApp} currentApp={currentApp} />
       <div className="content-container">{renderApp()}</div>
     </div>

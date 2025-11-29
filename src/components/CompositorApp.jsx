@@ -20,16 +20,7 @@ import {
   RADIUS,
 } from "../styles/designTokens";
 
-// ===== CONFIGURACIÓN API =====
-const RENDER_API_BASE_URL = "https://ndvi-api-service.onrender.com";
-const FORCE_RENDER_API_LOCAL_TEST = true;
-
-const API_BASE_URL =
-  FORCE_RENDER_API_LOCAL_TEST === true || process.env.NODE_ENV === "production"
-    ? RENDER_API_BASE_URL
-    : "http://localhost:5000";
-
-const API_COMPOSITOR_URL = `${API_BASE_URL}/api/compositor`;
+import { ndviService } from "../services/api";
 const S2_MIN_DATE = "2015-06-23";
 
 // ===== LEYENDAS DE ÍNDICES =====
@@ -186,19 +177,15 @@ export default function CompositorApp({ setCurrentApp }) {
     clearAllLayers();
 
     try {
-      const response = await fetch(API_COMPOSITOR_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          geometry: geometry,
-          date: formData.selectedDate,
-          max_cloud: formData.maxNubes,
-          composiciones: formData.composicionesSeleccionadas,
-          indices: formData.indicesSeleccionados,
-        }),
+      const response = await ndviService.createComposite({
+        geometry: geometry,
+        date: formData.selectedDate,
+        max_cloud: formData.maxNubes,
+        composiciones: formData.composicionesSeleccionadas,
+        indices: formData.indicesSeleccionados,
       });
 
-      const data = await response.json();
+      const data = response.data;
 
       if (data.status === "success") {
         setResults(data);
@@ -218,7 +205,9 @@ export default function CompositorApp({ setCurrentApp }) {
       }
     } catch (err) {
       console.error("Error:", err);
-      setError("Error de conexión con el servidor");
+      setError(
+        err.response?.data?.message || "Error de conexión con el servidor"
+      );
     } finally {
       setLoading(false);
     }

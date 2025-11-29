@@ -23,7 +23,8 @@ import {
   Filler,
 } from "chart.js";
 import MapView from "./MapView";
-import { COLORS, SHADOWS, ANIMATIONS, RADIUS } from "../styles/designTokens";
+import { ANIMATIONS, RADIUS } from "../styles/designTokens";
+import { ndviService } from "../services/api";
 
 // Registrar Chart.js
 ChartJS.register(
@@ -36,15 +37,6 @@ ChartJS.register(
   Legend,
   Filler
 );
-
-// Configuración de API
-const RENDER_API_BASE_URL = "https://ndvi-api-service.onrender.com";
-const FORCE_RENDER_API_LOCAL_TEST = true;
-
-const API_BASE_URL =
-  FORCE_RENDER_API_LOCAL_TEST === true || process.env.NODE_ENV === "production"
-    ? RENDER_API_BASE_URL
-    : "http://localhost:5000";
 
 const S2_MIN_DATE = "2017-04";
 
@@ -148,22 +140,14 @@ export default function MultiIndexComparison({ setCurrentApp }) {
     try {
       // Llamar al endpoint de series temporales para cada índice seleccionado
       const promises = selectedList.map(async (indexName) => {
-        const response = await fetch(`${API_BASE_URL}/api/timeseries/trend`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            geometry: geometry,
-            index: indexName,
-            start_month: startMonth,
-            end_month: endMonth,
-          }),
+        const response = await ndviService.getTimeSeries({
+          geometry: geometry,
+          index: indexName,
+          start_month: startMonth,
+          end_month: endMonth,
         });
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
+        const data = response.data;
 
         if (data.status === "success") {
           return { indexName, data };
@@ -196,17 +180,13 @@ export default function MultiIndexComparison({ setCurrentApp }) {
         // Obtener última imagen para cada índice
         for (const indexName of selectedList) {
           try {
-            const lastDateResponse = await fetch(`${API_BASE_URL}/api/ndvi`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                geometry: geometry,
-                date: new Date().toISOString().slice(0, 10),
-                index: indexName,
-              }),
+            const lastDateResponse = await ndviService.calculateIndex({
+              geometry: geometry,
+              date: new Date().toISOString().slice(0, 10),
+              index: indexName,
             });
 
-            const lastDateData = await lastDateResponse.json();
+            const lastDateData = lastDateResponse.data;
 
             if (lastDateData.status === "success" && lastDateData.tile_url) {
               const tileLayer = window.L.tileLayer(lastDateData.tile_url, {
