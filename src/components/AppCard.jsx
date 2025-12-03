@@ -1,7 +1,8 @@
-// src/components/AppCard.jsx - Diseño moderno con glassmorphism
+// src/components/AppCard.jsx - Modern Minimalist Design
 
 import React, { useState } from "react";
 import { ArrowRight } from "lucide-react";
+import { COLORS, SHADOWS, RADIUS, ANIMATIONS } from "../styles/designTokens";
 
 const AppCard = ({
   title,
@@ -15,57 +16,38 @@ const AppCard = ({
   const [isHovered, setIsHovered] = useState(false);
   const isFuture = appKey === "future";
 
-  // Animación de entrada escalonada
+  // Card base style - clean and minimal
   const cardBaseStyle = {
-    backgroundColor: "#ffffff",
-    backdropFilter: "blur(10px)",
-    padding: "30px",
-    borderRadius: "16px",
-    border: `1px solid ${isHovered && !isFuture ? color + "60" : "#e7e5e4"}`,
-    boxShadow:
-      isHovered && !isFuture
-        ? `0 20px 40px -10px ${color}30, 0 0 0 1px ${color}20`
-        : "0 1px 3px rgba(28, 25, 23, 0.08), 0 1px 2px rgba(28, 25, 23, 0.06)",
+    backgroundColor: COLORS.SURFACE,
+    padding: "1.75rem",
+    borderRadius: RADIUS.XL,
+    border: `1px solid ${
+      isHovered && !isFuture ? color + "40" : COLORS.BORDER
+    }`,
+    boxShadow: isHovered && !isFuture ? SHADOWS.LG : SHADOWS.DEFAULT,
     textAlign: "left",
-    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-    transform:
-      isHovered && !isFuture
-        ? "translateY(-8px) scale(1.02)"
-        : "translateY(0) scale(1)",
+    transition: ANIMATIONS.TRANSITION_BASE,
+    transform: isHovered && !isFuture ? "translateY(-4px)" : "translateY(0)",
     cursor: isFuture ? "not-allowed" : "pointer",
     display: "flex",
     flexDirection: "column",
-    minHeight: "260px",
+    minHeight: "240px",
     position: "relative",
-    opacity: isFuture ? 0.5 : 1,
+    opacity: isFuture ? 0.6 : 1,
     overflow: "hidden",
-    animation: `cardFadeIn 0.6s ease-out ${index * 0.1}s backwards`,
+    animation: `cardFadeIn 0.5s ease-out ${index * 0.08}s backwards`,
   };
 
-  // Efecto de brillo sutil en el borde superior
-  const topGlowStyle = {
+  // Subtle top accent
+  const topAccentStyle = {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    height: "2px",
-    background: `linear-gradient(90deg, transparent, ${color}, transparent)`,
+    height: "3px",
+    background: color,
     opacity: isHovered && !isFuture ? 1 : 0,
-    transition: "opacity 0.3s ease",
-  };
-
-  // Patrón de fondo sutil
-  const backgroundPatternStyle = {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundImage: `radial-gradient(circle at 2px 2px, ${color}10 1px, transparent 1px)`,
-    backgroundSize: "24px 24px",
-    opacity: isHovered && !isFuture ? 0.5 : 0,
-    transition: "opacity 0.4s ease",
-    pointerEvents: "none",
+    transition: ANIMATIONS.TRANSITION_BASE,
   };
 
   const contentWrapperStyle = {
@@ -77,36 +59,32 @@ const AppCard = ({
   };
 
   const iconBoxStyle = {
-    backgroundColor: color + "20",
+    backgroundColor: color + "15",
     color: color,
-    padding: "16px",
-    borderRadius: "12px",
-    marginBottom: "20px",
+    padding: "0.875rem",
+    borderRadius: RADIUS.LG,
+    marginBottom: "1.25rem",
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
     width: "fit-content",
-    transition: "all 0.3s ease",
-    transform:
-      isHovered && !isFuture
-        ? "rotate(-5deg) scale(1.1)"
-        : "rotate(0) scale(1)",
-    boxShadow: isHovered && !isFuture ? `0 0 20px ${color}40` : "none",
+    transition: ANIMATIONS.TRANSITION_BASE,
+    transform: isHovered && !isFuture ? "scale(1.05)" : "scale(1)",
   };
 
   const cardTitleStyle = {
-    fontSize: "1.5rem",
-    fontWeight: "700",
-    color: "#0f172a",
-    marginBottom: "12px",
-    lineHeight: "1.3",
-    letterSpacing: "-0.5px",
+    fontSize: "1.25rem",
+    fontWeight: "600",
+    color: COLORS.TEXT_PRIMARY,
+    marginBottom: "0.75rem",
+    lineHeight: "1.4",
+    letterSpacing: "-0.01em",
   };
 
   const cardDescriptionStyle = {
-    fontSize: "0.95rem",
-    color: "#57534e",
-    marginBottom: "20px",
+    fontSize: "0.875rem",
+    color: COLORS.TEXT_SECONDARY,
+    marginBottom: "1.25rem",
     lineHeight: "1.6",
     flexGrow: 1,
   };
@@ -114,34 +92,34 @@ const AppCard = ({
   const arrowContainerStyle = {
     display: "flex",
     alignItems: "center",
-    gap: "8px",
+    gap: "0.5rem",
     color: color,
-    fontSize: "0.9rem",
-    fontWeight: "600",
+    fontSize: "0.875rem",
+    fontWeight: "500",
     marginTop: "auto",
     opacity: isFuture ? 0 : 1,
   };
 
   const arrowStyle = {
-    transition: "transform 0.3s ease",
-    transform: isHovered && !isFuture ? "translateX(5px)" : "translateX(0)",
+    transition: ANIMATIONS.TRANSITION_BASE,
+    transform: isHovered && !isFuture ? "translateX(4px)" : "translateX(0)",
   };
 
-  // Badge de próximamente mejorado
+  // Future badge - cleaner design
   const futureBadgeStyle = {
     position: "absolute",
-    top: "20px",
-    right: "20px",
-    fontSize: "0.7rem",
-    fontWeight: "700",
-    padding: "6px 12px",
-    borderRadius: "8px",
-    backgroundColor: "rgba(168, 162, 158, 0.15)",
-    border: "1px solid rgba(168, 162, 158, 0.3)",
-    color: "#78716c",
-    letterSpacing: "0.5px",
+    top: "1.25rem",
+    right: "1.25rem",
+    fontSize: "0.6875rem",
+    fontWeight: "600",
+    padding: "0.375rem 0.75rem",
+    borderRadius: RADIUS.MD,
+    backgroundColor: COLORS.BACKGROUND_SECONDARY,
+    border: `1px solid ${COLORS.BORDER}`,
+    color: COLORS.TEXT_TERTIARY,
+    letterSpacing: "0.05em",
+    textTransform: "uppercase",
     zIndex: 10,
-    backdropFilter: "blur(5px)",
   };
 
   return (
@@ -150,7 +128,7 @@ const AppCard = ({
         @keyframes cardFadeIn {
           from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(16px);
           }
           to {
             opacity: 1;
@@ -165,14 +143,13 @@ const AppCard = ({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <div style={topGlowStyle} />
-        <div style={backgroundPatternStyle} />
+        <div style={topAccentStyle} />
 
-        {isFuture && <span style={futureBadgeStyle}>PRÓXIMAMENTE</span>}
+        {isFuture && <span style={futureBadgeStyle}>Próximamente</span>}
 
         <div style={contentWrapperStyle}>
           <div style={iconBoxStyle}>
-            <Icon size={28} strokeWidth={2} />
+            <Icon size={24} strokeWidth={2} />
           </div>
 
           <h3 style={cardTitleStyle}>{title}</h3>
@@ -182,7 +159,7 @@ const AppCard = ({
           {!isFuture && (
             <div style={arrowContainerStyle}>
               <span>Explorar</span>
-              <ArrowRight size={20} style={arrowStyle} strokeWidth={2.5} />
+              <ArrowRight size={18} style={arrowStyle} strokeWidth={2} />
             </div>
           )}
         </div>

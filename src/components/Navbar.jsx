@@ -1,46 +1,56 @@
-// components/Navbar.jsx - Diseño moderno con glassmorphism
+// components/Navbar.jsx - Modern Minimalist Design
 
 import React, { useState } from "react";
-import { Satellite, Home, Mail, Grid3X3, LogIn, UserPlus } from "lucide-react";
-import { COLORS, SHADOWS, ANIMATIONS, Z_INDEX } from "../styles/designTokens";
+import { Satellite, Home, Mail, Grid3X3, LogIn } from "lucide-react";
+import {
+  COLORS,
+  SHADOWS,
+  ANIMATIONS,
+  RADIUS,
+  Z_INDEX,
+} from "../styles/designTokens";
+import { useAuth } from "../contexts/AuthContext";
+import AuthModal from "./auth/AuthModal";
+import UserMenu from "./auth/UserMenu";
 
 const Navbar = ({ setCurrentApp, currentApp }) => {
   const [hoveredItem, setHoveredItem] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   const navStyle = {
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    backdropFilter: "blur(12px)",
-    color: "#1c1917",
-    padding: "0 30px",
-    height: "70px",
+    backgroundColor: COLORS.SURFACE,
+    color: COLORS.TEXT_PRIMARY,
+    padding: "0 2rem",
+    height: "64px",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    boxShadow: "0 1px 3px rgba(28, 25, 23, 0.08)",
-    borderBottom: `1px solid #e7e5e4`,
+    boxShadow: SHADOWS.SM,
+    borderBottom: `1px solid ${COLORS.BORDER}`,
     flexShrink: 0,
     position: "relative",
     zIndex: Z_INDEX.NAVBAR,
   };
 
   const logoStyle = {
-    fontSize: "1.5rem",
-    fontWeight: "800",
+    fontSize: "1.25rem",
+    fontWeight: "700",
     display: "flex",
     alignItems: "center",
     cursor: "pointer",
-    gap: "12px",
+    gap: "0.75rem",
     transition: ANIMATIONS.TRANSITION_BASE,
     userSelect: "none",
   };
 
   const logoTextStyle = {
-    background: "linear-gradient(135deg, #1d4ed8 0%, #047857 100%)",
+    background: `linear-gradient(135deg, ${COLORS.PRIMARY} 0%, ${COLORS.SECONDARY} 100%)`,
     WebkitBackgroundClip: "text",
     WebkitTextFillColor: "transparent",
     backgroundClip: "text",
-    fontWeight: "800",
-    letterSpacing: "-0.5px",
+    fontWeight: "700",
+    letterSpacing: "-0.02em",
   };
 
   const handleAppChange = (appName) => {
@@ -48,18 +58,18 @@ const Navbar = ({ setCurrentApp, currentApp }) => {
   };
 
   const linkBaseStyle = {
-    padding: "10px 18px",
-    borderRadius: "10px",
+    padding: "0.5rem 1rem",
+    borderRadius: RADIUS.MD,
     textDecoration: "none",
-    fontSize: "0.95rem",
-    fontWeight: "600",
+    fontSize: "0.875rem",
+    fontWeight: "500",
     display: "flex",
     alignItems: "center",
-    gap: "8px",
+    gap: "0.5rem",
     transition: ANIMATIONS.TRANSITION_BASE,
     cursor: "pointer",
     position: "relative",
-    border: "1px solid transparent",
+    border: "none",
   };
 
   const getLinkStyle = (appKey) => {
@@ -73,40 +83,38 @@ const Navbar = ({ setCurrentApp, currentApp }) => {
 
     return {
       ...linkBaseStyle,
-      color: isActive ? "#047857" : "#78716c",
+      color: isActive ? COLORS.SECONDARY : COLORS.TEXT_SECONDARY,
       backgroundColor: isActive
-        ? "rgba(4, 120, 87, 0.12)"
+        ? `${COLORS.SECONDARY}15`
         : isHovered
-        ? "rgba(28, 25, 23, 0.05)"
+        ? COLORS.BACKGROUND_SECONDARY
         : "transparent",
-      borderColor: isActive ? "rgba(4, 120, 87, 0.25)" : "transparent",
-      transform: isHovered && !isActive ? "translateY(-2px)" : "translateY(0)",
+      fontWeight: isActive ? "600" : "500",
     };
   };
 
   const actionButtonBase = {
     backgroundColor: "transparent",
-    border: "1px solid #e7e5e4",
-    borderRadius: "10px",
-    padding: "10px 20px",
+    border: `1px solid ${COLORS.BORDER}`,
+    borderRadius: RADIUS.MD,
+    padding: "0.5rem 1.25rem",
     cursor: "pointer",
-    fontSize: "0.9rem",
-    fontWeight: "600",
+    fontSize: "0.875rem",
+    fontWeight: "500",
     display: "flex",
     alignItems: "center",
-    gap: "8px",
+    gap: "0.5rem",
     transition: ANIMATIONS.TRANSITION_BASE,
-    color: "#78716c",
+    color: COLORS.TEXT_SECONDARY,
   };
 
   const getLoginButtonStyle = () => {
     const isHovered = hoveredItem === "login";
     return {
       ...actionButtonBase,
-      backgroundColor: isHovered ? "rgba(29, 78, 216, 0.08)" : "transparent",
-      borderColor: isHovered ? "rgba(29, 78, 216, 0.3)" : "#e7e5e4",
-      color: isHovered ? "#1d4ed8" : "#78716c",
-      transform: isHovered ? "translateY(-2px)" : "translateY(0)",
+      backgroundColor: isHovered ? `${COLORS.PRIMARY}08` : "transparent",
+      borderColor: isHovered ? COLORS.PRIMARY : COLORS.BORDER,
+      color: isHovered ? COLORS.PRIMARY : COLORS.TEXT_SECONDARY,
     };
   };
 
@@ -115,12 +123,11 @@ const Navbar = ({ setCurrentApp, currentApp }) => {
     return {
       ...actionButtonBase,
       backgroundColor: isHovered
-        ? "rgba(4, 120, 87, 0.15)"
-        : "rgba(4, 120, 87, 0.08)",
-      borderColor: isHovered ? "#047857" : "rgba(4, 120, 87, 0.25)",
-      color: "#047857",
-      transform: isHovered ? "translateY(-2px)" : "translateY(0)",
-      boxShadow: isHovered ? "0 4px 14px rgba(4, 120, 87, 0.28)" : "none",
+        ? `${COLORS.SECONDARY}20`
+        : `${COLORS.SECONDARY}10`,
+      borderColor: isHovered ? COLORS.SECONDARY : `${COLORS.SECONDARY}40`,
+      color: COLORS.SECONDARY,
+      boxShadow: isHovered ? SHADOWS.SM : "none",
     };
   };
 
@@ -134,11 +141,13 @@ const Navbar = ({ setCurrentApp, currentApp }) => {
         onMouseLeave={() => setHoveredItem(null)}
       >
         <Satellite
-          size={28}
-          color="#047857"
+          size={24}
+          color={COLORS.SECONDARY}
           style={{
             filter:
-              hoveredItem === "logo" ? `drop-shadow(0 0 8px #047857)` : "none",
+              hoveredItem === "logo"
+                ? `drop-shadow(0 0 6px ${COLORS.SECONDARY})`
+                : "none",
             transition: ANIMATIONS.TRANSITION_BASE,
           }}
         />
@@ -152,7 +161,7 @@ const Navbar = ({ setCurrentApp, currentApp }) => {
           margin: 0,
           padding: 0,
           display: "flex",
-          gap: "8px",
+          gap: "0.25rem",
         }}
       >
         <li>
@@ -187,25 +196,26 @@ const Navbar = ({ setCurrentApp, currentApp }) => {
         </li>
       </ul>
 
-      {/* Acciones (Login/Registro) */}
-      <div style={{ display: "flex", gap: "12px" }}>
+      {/* Auth section - conditional rendering */}
+      {isAuthenticated ? (
+        <UserMenu />
+      ) : (
         <button
           style={getLoginButtonStyle()}
           onMouseEnter={() => setHoveredItem("login")}
           onMouseLeave={() => setHoveredItem(null)}
-          onClick={() => console.log("Navegar a Login")}
+          onClick={() => setShowAuthModal(true)}
         >
-          <LogIn size={18} /> Login
+          <LogIn size={18} /> Iniciar Sesión
         </button>
-        <button
-          style={getRegisterButtonStyle()}
-          onMouseEnter={() => setHoveredItem("register")}
-          onMouseLeave={() => setHoveredItem(null)}
-          onClick={() => console.log("Navegar a Registro")}
-        >
-          <UserPlus size={18} /> Registro
-        </button>
-      </div>
+      )}
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        initialMode="login"
+      />
     </nav>
   );
 };

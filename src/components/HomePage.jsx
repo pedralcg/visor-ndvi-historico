@@ -1,4 +1,4 @@
-// components/HomePage.jsx - Diseño moderno con temática ambiental/satelital
+// components/HomePage.jsx - Modern Minimalist Design
 
 import React from "react";
 import {
@@ -12,7 +12,13 @@ import {
   GitCompare,
 } from "lucide-react";
 import AppCard from "./AppCard.jsx";
-import { COLORS, TYPOGRAPHY } from "../styles/designTokens";
+import {
+  COLORS,
+  TYPOGRAPHY,
+  SHADOWS,
+  RADIUS,
+  SPACING,
+} from "../styles/designTokens";
 
 // Animación de entrada suave
 const fadeInAnimation = `
@@ -52,14 +58,14 @@ const HomePage = ({ setCurrentApp }) => {
     display: "flex",
     justifyContent: "center",
     alignItems: "flex-start",
-    padding: "60px 20px",
-    background: `linear-gradient(135deg, #fafaf9 0%, #f5f5f4 50%, #fafaf9 100%)`,
+    padding: "4rem 1.5rem",
+    background: COLORS.BACKGROUND,
     fontFamily: TYPOGRAPHY.FONT_FAMILY,
     overflowY: "auto",
     position: "relative",
   };
 
-  // Efecto de grid sutil de fondo (evoca coordenadas satelitales)
+  // Subtle background grid
   const backgroundGridStyle = {
     position: "fixed",
     top: 0,
@@ -67,26 +73,13 @@ const HomePage = ({ setCurrentApp }) => {
     right: 0,
     bottom: 0,
     backgroundImage: `
-      linear-gradient(rgba(28, 25, 23, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(28, 25, 23, 0.03) 1px, transparent 1px)
+      linear-gradient(${COLORS.BORDER} 1px, transparent 1px),
+      linear-gradient(90deg, ${COLORS.BORDER} 1px, transparent 1px)
     `,
-    backgroundSize: "50px 50px",
+    backgroundSize: "60px 60px",
+    opacity: 0.4,
     pointerEvents: "none",
     zIndex: 0,
-  };
-
-  // Efecto de scanline sutil (simula escaneo satelital)
-  const scanlineStyle = {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: "2px",
-    background:
-      "linear-gradient(90deg, transparent, rgba(4, 120, 87, 0.2), transparent)",
-    animation: "scanline 8s linear infinite",
-    pointerEvents: "none",
-    zIndex: 1,
   };
 
   const contentContainerStyle = {
@@ -100,94 +93,91 @@ const HomePage = ({ setCurrentApp }) => {
   };
 
   const headerStyle = {
-    marginBottom: "70px",
-    padding: "0 20px",
+    marginBottom: "4rem",
+    padding: "0 1.5rem",
   };
 
   const titleStyle = {
-    fontSize: "4rem",
-    fontWeight: "800",
-    background:
-      "linear-gradient(135deg, #1d4ed8 0%, #047857 50%, #059669 100%)",
+    fontSize: "3.5rem",
+    fontWeight: "700",
+    background: `linear-gradient(135deg, ${COLORS.PRIMARY} 0%, ${COLORS.SECONDARY} 100%)`,
     WebkitBackgroundClip: "text",
     WebkitTextFillColor: "transparent",
     backgroundClip: "text",
-    marginBottom: "20px",
+    marginBottom: "1.5rem",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    letterSpacing: "-2px",
-    filter: "drop-shadow(0 2px 8px rgba(4, 120, 87, 0.15))",
+    letterSpacing: "-0.02em",
   };
 
   const globeContainerStyle = {
-    marginLeft: "20px",
+    marginLeft: "1.25rem",
     display: "inline-flex",
     alignItems: "center",
     animation: "float 6s ease-in-out infinite",
   };
 
   const subtitleStyle = {
-    fontSize: "1.35rem",
-    color: "#57534e",
-    fontWeight: "300",
-    lineHeight: "1.8",
-    maxWidth: "750px",
-    margin: "0 auto 15px auto",
-    letterSpacing: "0.3px",
+    fontSize: "1.25rem",
+    color: COLORS.TEXT_SECONDARY,
+    fontWeight: "400",
+    lineHeight: "1.7",
+    maxWidth: "700px",
+    margin: "0 auto 1rem auto",
   };
 
   const highlightStyle = {
-    color: "#047857",
+    color: COLORS.SECONDARY,
     fontWeight: "500",
   };
 
   const infoTextStyle = {
-    fontSize: "1rem",
-    color: "#78716c",
+    fontSize: "0.875rem",
+    color: COLORS.TEXT_TERTIARY,
     fontWeight: "400",
-    marginTop: "25px",
+    marginTop: "1.5rem",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: "8px",
+    gap: "0.5rem",
   };
 
   const techBadgeStyle = {
     display: "inline-block",
-    padding: "4px 12px",
-    borderRadius: "6px",
-    backgroundColor: "rgba(4, 120, 87, 0.08)",
-    border: "1px solid rgba(4, 120, 87, 0.2)",
-    color: "#047857",
-    fontSize: "0.85rem",
-    fontWeight: "600",
-    marginLeft: "8px",
+    padding: "0.25rem 0.75rem",
+    borderRadius: RADIUS.MD,
+    backgroundColor: `${COLORS.SECONDARY}10`,
+    border: `1px solid ${COLORS.SECONDARY}30`,
+    color: COLORS.SECONDARY,
+    fontSize: "0.75rem",
+    fontWeight: "500",
+    marginLeft: "0.5rem",
   };
 
   const appsGridStyle = {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-    gap: "35px",
-    marginTop: "40px",
+    gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+    gap: "2rem",
+    marginTop: "3rem",
     padding: "0",
-    marginBottom: "80px",
+    marginBottom: "5rem",
   };
 
   const footerStyle = {
-    marginTop: "60px",
-    fontSize: "0.9rem",
-    color: "#78716c",
-    borderTop: "1px solid rgba(28, 25, 23, 0.08)",
-    paddingTop: "30px",
+    marginTop: "4rem",
+    fontSize: "0.875rem",
+    color: COLORS.TEXT_TERTIARY,
+    borderTop: `1px solid ${COLORS.BORDER}`,
+    paddingTop: "2rem",
     display: "flex",
     flexDirection: "column",
-    gap: "10px",
+    gap: "0.5rem",
     alignItems: "center",
   };
 
   const authorStyle = {
-    color: "#57534e",
+    color: COLORS.TEXT_SECONDARY,
     fontWeight: "500",
   };
 
@@ -270,14 +260,17 @@ const HomePage = ({ setCurrentApp }) => {
       <style>{fadeInAnimation}</style>
       <div style={pageStyle}>
         <div style={backgroundGridStyle} />
-        <div style={scanlineStyle} />
 
         <div style={contentContainerStyle}>
           <header style={headerStyle}>
             <h1 style={titleStyle}>
               GeoVisor
               <span style={globeContainerStyle}>
-                <Satellite size={50} strokeWidth={1.5} color="#047857" />
+                <Satellite
+                  size={44}
+                  strokeWidth={1.5}
+                  color={COLORS.SECONDARY}
+                />
               </span>
             </h1>
 
