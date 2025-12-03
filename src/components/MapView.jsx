@@ -291,6 +291,7 @@ const MapView = forwardRef(
             border-radius: 10px !important;
             box-shadow: 0 4px 12px rgba(28, 25, 23, 0.12) !important;
             padding: 8px !important;
+            z-index: 400 !important;
           }
 
           .leaflet-control-layers-toggle {

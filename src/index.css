@@ -1,4 +1,4 @@
-/* ====================================================================\
+/* ====================================================================
 // CORRECCIÓN CLAVE: Propaga el 100% de altura de la ventana
 // ====================================================================*/
 html,
@@ -58,4 +58,18 @@ code {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Override Leaflet controls z-index to ensure UserMenu dropdown appears above */
+.leaflet-control-layers,
+.leaflet-control-zoom,
+.leaflet-draw,
+.leaflet-draw-toolbar,
+.leaflet-control {
+  z-index: 400 !important;
+}
+
+/* Ensure the legend stays below as well */
+.index-legend {
+  z-index: 400 !important;
 }

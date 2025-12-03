@@ -20,10 +20,54 @@ const api = axios.create({
   timeout: 180000,
 });
 
-// Interceptor para manejo de errores global (opcional)
+// Request interceptor - añadir token de autenticación
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("access_token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response interceptor - manejo de errores y refresh automático
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Si es 401 y no hemos intentado refresh aún
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const refreshToken = localStorage.getItem("refresh_token");
+        if (!refreshToken) {
+          throw new Error("No refresh token");
+        }
+
+        // Intentar refresh
+        const response = await axios.post(`${API_BASE_URL}/api/auth/refresh`, {
+          refresh_token: refreshToken,
+        });
+
+        const { access_token } = response.data;
+        localStorage.setItem("access_token", access_token);
+
+        // Reintentar request original con nuevo token
+        originalRequest.headers.Authorization = `Bearer ${access_token}`;
+        return api(originalRequest);
+      } catch (refreshError) {
+        // Refresh falló, limpiar auth y redirigir
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        window.location.href = "/";
+        return Promise.reject(refreshError);
+      }
+    }
+
     console.error("❌ API Error:", error.response?.data || error.message);
     return Promise.reject(error);
   }

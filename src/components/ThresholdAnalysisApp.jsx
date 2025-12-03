@@ -34,6 +34,7 @@ import {
 } from "../styles/designTokens";
 
 import { ndviService } from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
 
 ChartJS.register(
   CategoryScale,
@@ -72,6 +73,7 @@ const DEFAULT_THRESHOLDS = {
 };
 
 export default function ThresholdAnalysisApp({ setCurrentApp }) {
+  const { isAuthenticated } = useAuth();
   const getCurrentYearMonth = () => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
@@ -234,6 +236,16 @@ export default function ThresholdAnalysisApp({ setCurrentApp }) {
   };
 
   const handleAnalysis = async () => {
+    if (!isAuthenticated) {
+      setError(
+        "🔒 Acceso Restringido: Debes iniciar sesión para realizar análisis."
+      );
+      alert(
+        "⚠️ Inicio de Sesión Requerido\n\nPara realizar análisis con umbrales, necesitas iniciar sesión en tu cuenta."
+      );
+      return;
+    }
+
     if (!geometry) {
       setError("Por favor, dibuja un área en el mapa primero");
       return;

@@ -11,13 +11,12 @@ import ChangeDetectionApp from "./components/ChangeDetectionApp.jsx";
 import CompositorApp from "./components/CompositorApp.jsx";
 import Navbar from "./components/Navbar.jsx";
 import BackendStatusIndicator from "./components/BackendStatusIndicator.jsx";
-// import TestApp from "./components/TestApp.jsx";
 import ContactoApp from "./components/ContactoApp.jsx";
+import { AuthProvider } from "./contexts/AuthContext.jsx";
 import { COLORS, TYPOGRAPHY } from "./styles/designTokens.js";
 
-export default function App() {
+function AppContent() {
   const [currentApp, setCurrentApp] = useState("home");
-  const [backendStatus, setBackendStatus] = useState("checking");
 
   // Obtener API URL desde el servicio
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5001";
@@ -88,12 +87,18 @@ export default function App() {
 
   return (
     <div className="app-container" style={mainAppStyle}>
-      <BackendStatusIndicator
-        apiUrl={API_URL}
-        onStatusChange={setBackendStatus}
-      />
+      <BackendStatusIndicator apiUrl={API_URL} />
       <Navbar setCurrentApp={setCurrentApp} currentApp={currentApp} />
       <div className="content-container">{renderApp()}</div>
     </div>
+  );
+}
+
+// Wrap with AuthProvider
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }

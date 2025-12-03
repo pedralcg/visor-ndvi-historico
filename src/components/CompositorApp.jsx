@@ -21,6 +21,7 @@ import {
 } from "../styles/designTokens";
 
 import { ndviService } from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
 const S2_MIN_DATE = "2015-06-23";
 
 // ===== LEYENDAS DE ÍNDICES =====
@@ -111,6 +112,7 @@ const INDICES_DISPONIBLES = {
 };
 
 export default function CompositorApp({ setCurrentApp }) {
+  const { isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
     selectedDate: new Date().toISOString().slice(0, 10),
     maxNubes: 30,
@@ -158,6 +160,16 @@ export default function CompositorApp({ setCurrentApp }) {
 
   // ===== HANDLER: ANÁLISIS =====
   const handleAnalisis = async () => {
+    if (!isAuthenticated) {
+      setError(
+        "🔒 Acceso Restringido: Debes iniciar sesión para realizar análisis."
+      );
+      alert(
+        "⚠️ Inicio de Sesión Requerido\n\nPara generar composiciones e índices, necesitas iniciar sesión en tu cuenta."
+      );
+      return;
+    }
+
     if (!geometry) {
       setError("Por favor, dibuja un área o punto en el mapa primero");
       return;
