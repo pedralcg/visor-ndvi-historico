@@ -28,9 +28,11 @@ import {
   TYPOGRAPHY,
   ANIMATIONS,
   RADIUS,
+  SPACING,
 } from "../styles/designTokens";
 
 import { ndviService } from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
 
 // Registrar plugins de Chart.js
 ChartJS.register(
@@ -49,6 +51,7 @@ ChartJS.register(
 const S2_MIN_DATE = "2017-04";
 
 export default function TimeSeriesTrendApp({ setCurrentApp }) {
+  const { isAuthenticated } = useAuth();
   // Función auxiliar para obtener el mes actual
   const getCurrentYearMonth = () => {
     const now = new Date();
@@ -171,6 +174,16 @@ export default function TimeSeriesTrendApp({ setCurrentApp }) {
   };
 
   const handleAnalysis = async () => {
+    if (!isAuthenticated) {
+      setError(
+        "🔒 Acceso Restringido: Debes iniciar sesión para realizar análisis."
+      );
+      alert(
+        "⚠️ Inicio de Sesión Requerido\n\nPara realizar análisis de series temporales, necesitas iniciar sesión en tu cuenta."
+      );
+      return;
+    }
+
     if (!geometry) {
       setError("Por favor, dibuja un área en el mapa primero");
       return;
@@ -314,13 +327,12 @@ export default function TimeSeriesTrendApp({ setCurrentApp }) {
   };
 
   const sidebarStyle = {
-    width: 420,
-    padding: "28px 20px 28px 28px",
-    background: "rgba(255, 255, 255, 0.9)",
-    backdropFilter: "blur(12px)",
-    color: "#1c1917",
-    borderRight: "1px solid #e7e5e4",
-    boxShadow: "1px 0 10px rgba(28, 25, 23, 0.06)",
+    width: "380px",
+    padding: SPACING[6],
+    background: COLORS.SURFACE,
+    color: COLORS.TEXT_PRIMARY,
+    borderRight: `1px solid ${COLORS.BORDER}`,
+    boxShadow: SHADOWS.SM,
     flexShrink: 0,
     height: "100%",
     overflowY: "auto",
@@ -330,66 +342,67 @@ export default function TimeSeriesTrendApp({ setCurrentApp }) {
 
   const headerStyle = {
     marginTop: 0,
-    marginBottom: 24,
-    paddingBottom: 16,
-    borderBottom: "2px solid #7c3aed",
-    fontSize: "1.75rem",
-    fontWeight: "800",
-    color: "#1c1917",
+    marginBottom: SPACING[5],
+    paddingBottom: SPACING[4],
+    borderBottom: `2px solid ${COLORS.TERTIARY}`,
+    fontSize: TYPOGRAPHY.FONT_SIZES.XL,
+    fontWeight: TYPOGRAPHY.FONT_WEIGHTS.BOLD,
+    color: COLORS.TEXT_PRIMARY,
     display: "flex",
     alignItems: "center",
-    gap: "10px",
+    gap: SPACING[2],
   };
 
   const sectionStyle = {
-    marginBottom: 20,
-    padding: 20,
-    background: "rgba(250, 250, 249, 0.8)",
-    backdropFilter: "blur(8px)",
+    marginBottom: SPACING[5],
+    padding: SPACING[5],
+    background: COLORS.BACKGROUND_SECONDARY,
     borderRadius: RADIUS.LG,
-    border: "1px solid #e7e5e4",
+    border: `1px solid ${COLORS.BORDER}`,
   };
 
   const labelStyle = {
     display: "block",
-    fontSize: "0.9rem",
-    fontWeight: "600",
-    color: "#1c1917",
-    marginBottom: 8,
+    fontSize: TYPOGRAPHY.FONT_SIZES.SM,
+    fontWeight: TYPOGRAPHY.FONT_WEIGHTS.SEMIBOLD,
+    color: COLORS.TEXT_PRIMARY,
+    marginBottom: SPACING[2],
   };
 
   const selectStyle = {
     width: "100%",
-    padding: "12px 14px",
-    fontSize: "0.95rem",
-    border: "1px solid #e7e5e4",
+    padding: `${SPACING[3]} ${SPACING[3]}`,
+    fontSize: TYPOGRAPHY.FONT_SIZES.SM,
+    border: `1px solid ${COLORS.BORDER}`,
     borderRadius: RADIUS.MD,
-    background: "#ffffff",
-    color: "#1c1917",
+    background: COLORS.SURFACE,
+    color: COLORS.TEXT_PRIMARY,
     outline: "none",
     boxSizing: "border-box",
     cursor: "pointer",
+    transition: ANIMATIONS.TRANSITION_BASE,
   };
 
   const buttonStyle = {
     width: "100%",
-    padding: "14px",
-    fontSize: "1rem",
+    padding: SPACING[3],
+    fontSize: TYPOGRAPHY.FONT_SIZES.BASE,
     background:
       geometry && !loading
-        ? "linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%)"
-        : "rgba(168, 162, 158, 0.3)",
-    color: geometry && !loading ? "#ffffff" : "#a8a29e",
+        ? `linear-gradient(135deg, ${COLORS.TERTIARY} 0%, #8b5cf6 100%)`
+        : COLORS.TEXT_DISABLED,
+    color: geometry && !loading ? "#ffffff" : COLORS.TEXT_TERTIARY,
     border: "none",
     borderRadius: RADIUS.MD,
     cursor: geometry && !loading ? "pointer" : "not-allowed",
-    fontWeight: "700",
+    fontWeight: TYPOGRAPHY.FONT_WEIGHTS.BOLD,
     transition: ANIMATIONS.TRANSITION_BASE,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: "10px",
-    marginTop: 20,
+    gap: SPACING[2],
+    marginTop: SPACING[5],
+    boxShadow: geometry && !loading ? SHADOWS.SM : "none",
   };
 
   // Datos del gráfico COMBO (línea + barras)
