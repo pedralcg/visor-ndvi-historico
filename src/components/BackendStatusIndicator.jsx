@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Activity, AlertCircle, CheckCircle, Clock } from "lucide-react";
+import {
+  COLORS,
+  SHADOWS,
+  Z_INDEX,
+  RADIUS,
+  ANIMATIONS,
+} from "../styles/designTokens";
 
 /**
  * BackendStatusIndicator - Componente para mostrar el estado del backend
@@ -82,16 +89,17 @@ const BackendStatusIndicator = ({ apiUrl, onStatusChange }) => {
         top: 0,
         left: 0,
         right: 0,
-        zIndex: 9999,
-        padding: "16px",
+        zIndex: Z_INDEX.MODAL + 100, // Ensure it's on top of everything
+        padding: "1rem",
         background: getBackgroundColor(status),
-        color: "#ffffff",
+        color: COLORS.SURFACE,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        gap: "12px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+        gap: "0.75rem",
+        boxShadow: SHADOWS.MD,
         animation: "slideDown 0.3s ease-out",
+        fontFamily: "Inter, system-ui, sans-serif",
       }}
     >
       {getIcon(status)}
@@ -101,15 +109,17 @@ const BackendStatusIndicator = ({ apiUrl, onStatusChange }) => {
         <button
           onClick={handleRetry}
           style={{
-            marginLeft: "12px",
-            padding: "8px 16px",
-            background: "#ffffff",
-            color: "#dc2626",
+            marginLeft: "0.75rem",
+            padding: "0.5rem 1rem",
+            background: COLORS.SURFACE,
+            color: COLORS.ERROR,
             border: "none",
-            borderRadius: "6px",
+            borderRadius: RADIUS.MD,
             fontWeight: "600",
             cursor: "pointer",
             fontSize: "0.9rem",
+            boxShadow: SHADOWS.SM,
+            transition: ANIMATIONS.TRANSITION_BASE,
           }}
         >
           Reintentar
@@ -122,13 +132,13 @@ const BackendStatusIndicator = ({ apiUrl, onStatusChange }) => {
 const getBackgroundColor = (status) => {
   switch (status) {
     case "checking":
-      return "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)";
+      return `linear-gradient(135deg, ${COLORS.PRIMARY} 0%, ${COLORS.SECONDARY} 100%)`;
     case "waking":
-      return "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
+      return "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"; // Amber for waking
     case "offline":
-      return "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)";
+      return `linear-gradient(135deg, ${COLORS.ERROR} 0%, #b91c1c 100%)`;
     default:
-      return "linear-gradient(135deg, #10b981 0%, #059669 100%)";
+      return `linear-gradient(135deg, ${COLORS.SUCCESS} 0%, #059669 100%)`;
   }
 };
 

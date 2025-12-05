@@ -9,6 +9,14 @@ import React, {
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
+import {
+  COLORS,
+  SHADOWS,
+  RADIUS,
+  SPACING,
+  TYPOGRAPHY,
+  ANIMATIONS,
+} from "../styles/designTokens";
 
 // Fix de íconos de marcador de Leaflet
 import icon from "leaflet/dist/images/marker-icon.png";
@@ -60,10 +68,13 @@ const MapView = forwardRef(
     const updateLegend = (config) => {
       if (legendRef.current && config?.html) {
         const legendDiv = legendRef.current.getContainer();
-        if (legendDiv) {
-          legendDiv.innerHTML = config.html;
+        const contentDiv = legendDiv.querySelector(".legend-content");
+        if (contentDiv) {
+          contentDiv.innerHTML = config.html;
           // Hacer visible la leyenda cuando se actualiza
           legendDiv.style.display = "block";
+          // Opcional: expandir automáticamente al actualizar
+          legendDiv.classList.remove("collapsed");
         }
       }
     };
@@ -121,7 +132,7 @@ const MapView = forwardRef(
       map.addLayer(drawnItemsRef.current);
 
       const control = L.control
-        .layers(bases, null, { collapsed: false })
+        .layers(bases, null, { collapsed: true })
         .addTo(map);
       layersControlRef.current = control;
 
@@ -179,7 +190,25 @@ const MapView = forwardRef(
       legend.onAdd = () => {
         const div = L.DomUtil.create("div", "index-legend");
         div.style.display = "none"; // Oculta por defecto
-        div.innerHTML = `
+
+        // Botón de toggle
+        const toggleBtn = L.DomUtil.create("button", "legend-toggle", div);
+        toggleBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
+        toggleBtn.title = "Contraer/Expandir leyenda";
+
+        toggleBtn.onclick = (e) => {
+          L.DomEvent.stopPropagation(e);
+          div.classList.toggle("collapsed");
+          // Rotar icono
+          const isCollapsed = div.classList.contains("collapsed");
+          toggleBtn.style.transform = isCollapsed
+            ? "rotate(180deg)"
+            : "rotate(0deg)";
+        };
+
+        // Contenedor de contenido
+        const contentDiv = L.DomUtil.create("div", "legend-content", div);
+        contentDiv.innerHTML = `
           <h4 style="margin-bottom:8px; font-size:14px; color:#1c1917; font-weight: 700;">
             Selecciona un índice
           </h4>
@@ -187,6 +216,7 @@ const MapView = forwardRef(
             Dibuja un área y calcula un índice<br>para ver la leyenda aquí.
           </div>
         `;
+
         return div;
       };
       legend.addTo(map);
@@ -241,35 +271,70 @@ const MapView = forwardRef(
           {`
           /* Estilo para la leyenda - tema claro actualizado */
           .index-legend {
-            background: rgba(255, 255, 255, 0.95); 
+            background: ${COLORS.SURFACE}e6; 
             backdrop-filter: blur(8px);
-            border-radius: 12px;
-            padding: 16px 20px;
-            box-shadow: 0 4px 16px rgba(28, 25, 23, 0.15);
-            border: 1px solid #e7e5e4;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            color: #1c1917; 
+            border-radius: ${RADIUS.LG};
+            padding: ${SPACING[4]} ${SPACING[5]};
+            box-shadow: ${SHADOWS.LG};
+            border: 1px solid ${COLORS.BORDER};
+            font-family: ${TYPOGRAPHY.FONT_FAMILY};
+            color: ${COLORS.TEXT_PRIMARY}; 
             max-width: 280px;
-            transition: all 0.3s ease;
+            transition: ${ANIMATIONS.TRANSITION_BASE};
+            position: relative;
+            min-width: 200px;
           }
           
           .index-legend:hover {
-            box-shadow: 0 6px 20px rgba(28, 25, 23, 0.2);
+            box-shadow: ${SHADOWS.XL};
+          }
+
+          .index-legend.collapsed {
+            padding-bottom: ${SPACING[2]};
+            width: auto;
+            min-width: unset;
+          }
+
+          .index-legend.collapsed .legend-content {
+            display: none;
+          }
+
+          .legend-toggle {
+            position: absolute;
+            top: ${SPACING[2]};
+            right: ${SPACING[2]};
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: ${SPACING[1]};
+            border-radius: ${RADIUS.SM};
+            color: ${COLORS.TEXT_SECONDARY};
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: ${ANIMATIONS.TRANSITION_BASE};
+            z-index: 10;
+          }
+
+          .legend-toggle:hover {
+            background: ${COLORS.BACKGROUND_SECONDARY};
+            color: ${COLORS.PRIMARY};
           }
           
           .index-legend h4 {
-            margin: 0 0 10px 0;
-            font-size: 14px;
-            color: #1c1917;
-            font-weight: 700;
+            margin: 0 0 ${SPACING[2]} 0;
+            font-size: ${TYPOGRAPHY.FONT_SIZES.SM};
+            color: ${COLORS.TEXT_PRIMARY};
+            font-weight: ${TYPOGRAPHY.FONT_WEIGHTS.BOLD};
             letter-spacing: -0.01em;
+            padding-right: ${SPACING[6]}; /* Space for toggle button */
           }
           
           .index-legend div {
-            line-height: 22px;
-            font-size: 12px;
-            font-weight: 500;
-            color: #57534e;
+            line-height: ${TYPOGRAPHY.LINE_HEIGHTS.RELAXED};
+            font-size: ${TYPOGRAPHY.FONT_SIZES.XS};
+            font-weight: ${TYPOGRAPHY.FONT_WEIGHTS.MEDIUM};
+            color: ${COLORS.TEXT_SECONDARY};
           }
           
           .index-legend i {
@@ -277,91 +342,94 @@ const MapView = forwardRef(
             width: 18px;
             height: 10px;
             float: left;
-            margin-right: 8px;
+            margin-right: ${SPACING[2]};
             margin-top: 6px;
-            border-radius: 2px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            border-radius: ${RADIUS.XS};
+            box-shadow: ${SHADOWS.SM};
           }
 
           /* Estilos para el control de capas - tema claro */
           .leaflet-control-layers {
-            background: rgba(255, 255, 255, 0.95) !important;
+            background: ${COLORS.SURFACE}e6 !important;
             backdrop-filter: blur(8px);
-            border: 1px solid #e7e5e4 !important;
-            border-radius: 10px !important;
-            box-shadow: 0 4px 12px rgba(28, 25, 23, 0.12) !important;
-            padding: 8px !important;
+            border: 1px solid ${COLORS.BORDER} !important;
+            border-radius: ${RADIUS.MD} !important;
+            box-shadow: ${SHADOWS.MD} !important;
+            padding: ${SPACING[2]} !important;
             z-index: 400 !important;
           }
 
           .leaflet-control-layers-toggle {
-            background-color: #ffffff !important;
-            border: 1px solid #e7e5e4 !important;
+            background-color: ${COLORS.SURFACE} !important;
+            border: 1px solid ${COLORS.BORDER} !important;
           }
 
           .leaflet-control-layers-expanded {
-            padding: 12px 14px !important;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-            color: #1c1917 !important;
+            padding: ${SPACING[3]} ${SPACING[3]} !important;
+            font-family: ${TYPOGRAPHY.FONT_FAMILY} !important;
+            color: ${COLORS.TEXT_PRIMARY} !important;
           }
 
           .leaflet-control-layers-base label,
           .leaflet-control-layers-overlays label {
-            color: #1c1917 !important;
-            font-weight: 500 !important;
-            font-size: 13px !important;
-            padding: 4px 0 !important;
+            color: ${COLORS.TEXT_PRIMARY} !important;
+            font-weight: ${TYPOGRAPHY.FONT_WEIGHTS.MEDIUM} !important;
+            font-size: ${TYPOGRAPHY.FONT_SIZES.SM} !important;
+            padding: ${SPACING[1]} 0 !important;
           }
 
           .leaflet-control-layers-separator {
-            border-top: 1px solid #e7e5e4 !important;
-            margin: 8px 0 !important;
+            border-top: 1px solid ${COLORS.BORDER} !important;
+            margin: ${SPACING[2]} 0 !important;
           }
 
           /* Estilos para los controles de dibujo - tema claro */
           .leaflet-draw-toolbar a {
-            background-color: #ffffff !important;
-            border: 1px solid #e7e5e4 !important;
+            background-color: ${COLORS.SURFACE} !important;
+            border: 1px solid ${COLORS.BORDER} !important;
+            color: ${COLORS.TEXT_PRIMARY} !important;
           }
 
           .leaflet-draw-toolbar a:hover {
-            background-color: #f5f5f4 !important;
-            border-color: #047857 !important;
+            background-color: ${COLORS.BACKGROUND_SECONDARY} !important;
+            border-color: ${COLORS.PRIMARY} !important;
+            color: ${COLORS.PRIMARY} !important;
           }
 
           .leaflet-draw-actions a {
-            background-color: #ffffff !important;
-            border: 1px solid #e7e5e4 !important;
-            color: #1c1917 !important;
+            background-color: ${COLORS.SURFACE} !important;
+            border: 1px solid ${COLORS.BORDER} !important;
+            color: ${COLORS.TEXT_PRIMARY} !important;
           }
 
           .leaflet-draw-actions a:hover {
-            background-color: #047857 !important;
-            color: #ffffff !important;
+            background-color: ${COLORS.PRIMARY} !important;
+            color: ${COLORS.SURFACE} !important;
           }
 
           /* Tooltips del mapa */
           .leaflet-tooltip {
-            background-color: #1c1917 !important;
-            color: #ffffff !important;
-            border: 1px solid #047857 !important;
-            border-radius: 6px !important;
-            padding: 6px 10px !important;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-            font-weight: 500 !important;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+            background-color: ${COLORS.SURFACE} !important;
+            color: ${COLORS.TEXT_PRIMARY} !important;
+            border: 1px solid ${COLORS.PRIMARY} !important;
+            border-radius: ${RADIUS.SM} !important;
+            padding: ${SPACING[1]} ${SPACING[2]} !important;
+            font-family: ${TYPOGRAPHY.FONT_FAMILY} !important;
+            font-weight: ${TYPOGRAPHY.FONT_WEIGHTS.MEDIUM} !important;
+            box-shadow: ${SHADOWS.MD} !important;
           }
 
           /* Zoom control - tema claro */
           .leaflet-control-zoom a {
-            background-color: #ffffff !important;
-            border: 1px solid #e7e5e4 !important;
-            color: #1c1917 !important;
+            background-color: ${COLORS.SURFACE} !important;
+            border: 1px solid ${COLORS.BORDER} !important;
+            color: ${COLORS.TEXT_PRIMARY} !important;
           }
 
           .leaflet-control-zoom a:hover {
-            background-color: #f5f5f4 !important;
-            border-color: #047857 !important;
+            background-color: ${COLORS.BACKGROUND_SECONDARY} !important;
+            border-color: ${COLORS.PRIMARY} !important;
+            color: ${COLORS.PRIMARY} !important;
           }
         `}
         </style>
