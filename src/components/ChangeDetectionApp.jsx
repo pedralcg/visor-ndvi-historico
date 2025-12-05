@@ -17,6 +17,7 @@ import {
   TYPOGRAPHY,
   ANIMATIONS,
   RADIUS,
+  SPACING,
 } from "../styles/designTokens";
 
 import { ndviService } from "../services/api";
@@ -225,22 +226,18 @@ export default function ChangeDetectionApp({ setCurrentApp }) {
     display: "flex",
     height: "100%",
     width: "100%",
-    fontFamily:
-      TYPOGRAPHY?.FONT_FAMILY ||
-      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-    background:
-      "linear-gradient(135deg, #fafaf9 0%, #f5f5f4 50%, #fafaf9 100%)",
+    fontFamily: TYPOGRAPHY.FONT_FAMILY,
+    background: COLORS.BACKGROUND,
     overflow: "hidden",
   };
 
   const sidebarStyle = {
-    width: 420,
-    padding: "28px 20px 28px 28px",
-    background: "rgba(255, 255, 255, 0.9)",
-    backdropFilter: "blur(12px)",
-    color: "#1c1917",
-    borderRight: "1px solid #e7e5e4",
-    boxShadow: "1px 0 10px rgba(28, 25, 23, 0.06)",
+    width: "380px",
+    padding: SPACING[6],
+    background: COLORS.SURFACE,
+    color: COLORS.TEXT_PRIMARY,
+    borderRight: `1px solid ${COLORS.BORDER}`,
+    boxShadow: SHADOWS.SM,
     flexShrink: 0,
     height: "100%",
     overflowY: "auto",
@@ -249,41 +246,41 @@ export default function ChangeDetectionApp({ setCurrentApp }) {
 
   const headerStyle = {
     marginTop: 0,
-    marginBottom: 24,
-    paddingBottom: 16,
-    borderBottom: "2px solid #8b5cf6",
-    fontSize: "1.75rem",
-    fontWeight: "800",
-    color: "#1c1917",
+    marginBottom: SPACING[6],
+    paddingBottom: SPACING[4],
+    borderBottom: `2px solid ${COLORS.TERTIARY}`,
+    fontSize: TYPOGRAPHY.FONT_SIZES.XL,
+    fontWeight: TYPOGRAPHY.FONT_WEIGHTS.BOLD,
+    color: COLORS.TEXT_PRIMARY,
     display: "flex",
     alignItems: "center",
-    gap: "10px",
+    gap: SPACING[2],
   };
 
   const sectionStyle = {
-    marginBottom: 20,
-    padding: 20,
-    background: "rgba(250, 250, 249, 0.8)",
+    marginBottom: SPACING[5],
+    padding: SPACING[5],
+    background: COLORS.BACKGROUND_SECONDARY,
     borderRadius: RADIUS.LG,
-    border: "1px solid #e7e5e4",
+    border: `1px solid ${COLORS.BORDER}`,
   };
 
   const labelStyle = {
     display: "block",
-    fontSize: "0.9rem",
-    fontWeight: "600",
-    color: "#1c1917",
-    marginBottom: 8,
+    fontSize: TYPOGRAPHY.FONT_SIZES.SM,
+    fontWeight: TYPOGRAPHY.FONT_WEIGHTS.SEMIBOLD,
+    color: COLORS.TEXT_PRIMARY,
+    marginBottom: SPACING[2],
   };
 
   const selectStyle = {
     width: "100%",
-    padding: "12px 14px",
-    fontSize: "0.95rem",
-    border: "1px solid #e7e5e4",
+    padding: `${SPACING[3]} ${SPACING[3]}`,
+    fontSize: TYPOGRAPHY.FONT_SIZES.SM,
+    border: `1px solid ${COLORS.BORDER}`,
     borderRadius: RADIUS.MD,
-    background: "#ffffff",
-    color: "#1c1917",
+    background: COLORS.SURFACE,
+    color: COLORS.TEXT_PRIMARY,
     outline: "none",
     boxSizing: "border-box",
     cursor: "pointer",
@@ -291,23 +288,21 @@ export default function ChangeDetectionApp({ setCurrentApp }) {
 
   const buttonStyle = {
     width: "100%",
-    padding: "14px",
-    fontSize: "1rem",
-    background:
-      geometry && !loading
-        ? "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)"
-        : "rgba(168, 162, 158, 0.3)",
-    color: geometry && !loading ? "#ffffff" : "#a8a29e",
+    padding: SPACING[3],
+    fontSize: TYPOGRAPHY.FONT_SIZES.BASE,
+    background: geometry && !loading ? COLORS.TERTIARY : COLORS.TEXT_DISABLED,
+    color: geometry && !loading ? COLORS.SURFACE : COLORS.TEXT_TERTIARY,
     border: "none",
     borderRadius: RADIUS.MD,
     cursor: geometry && !loading ? "pointer" : "not-allowed",
-    fontWeight: "700",
+    fontWeight: TYPOGRAPHY.FONT_WEIGHTS.BOLD,
     transition: ANIMATIONS.TRANSITION_BASE,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: "10px",
-    marginTop: 20,
+    gap: SPACING[2],
+    marginTop: SPACING[5],
+    boxShadow: geometry && !loading ? SHADOWS.MD : "none",
   };
 
   return (
@@ -321,10 +316,10 @@ export default function ChangeDetectionApp({ setCurrentApp }) {
           <p
             style={{
               margin: 0,
-              fontSize: "0.85rem",
-              color: "#78716c",
-              marginTop: "-16px",
-              marginBottom: "24px",
+              fontSize: TYPOGRAPHY.FONT_SIZES.XS,
+              color: COLORS.TEXT_SECONDARY,
+              marginTop: `-${SPACING[4]}`,
+              marginBottom: SPACING[6],
             }}
           >
             Visualiza diferencias espaciales entre periodos
@@ -334,7 +329,7 @@ export default function ChangeDetectionApp({ setCurrentApp }) {
             <label style={labelStyle}>
               <Activity
                 size={16}
-                style={{ display: "inline", marginRight: "5px" }}
+                style={{ display: "inline", marginRight: SPACING[1] }}
               />
               Índice Espectral
             </label>
@@ -351,7 +346,7 @@ export default function ChangeDetectionApp({ setCurrentApp }) {
               <option value="MSI">MSI - Estrés Hídrico</option>
             </select>
 
-            <label style={{ ...labelStyle, marginTop: 16 }}>
+            <label style={{ ...labelStyle, marginTop: SPACING[4] }}>
               <Calendar
                 size={16}
                 style={{ display: "inline", marginRight: "5px" }}
@@ -396,7 +391,7 @@ export default function ChangeDetectionApp({ setCurrentApp }) {
               </select>
             </div>
 
-            <label style={{ ...labelStyle, marginTop: 16 }}>
+            <label style={{ ...labelStyle, marginTop: SPACING[4] }}>
               <Calendar
                 size={16}
                 style={{ display: "inline", marginRight: "5px" }}

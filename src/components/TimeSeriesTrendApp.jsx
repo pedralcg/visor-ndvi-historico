@@ -318,11 +318,8 @@ export default function TimeSeriesTrendApp({ setCurrentApp }) {
     display: "flex",
     height: "100%",
     width: "100%",
-    fontFamily:
-      TYPOGRAPHY?.FONT_FAMILY ||
-      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-    background:
-      "linear-gradient(135deg, #fafaf9 0%, #f5f5f4 50%, #fafaf9 100%)",
+    fontFamily: TYPOGRAPHY.FONT_FAMILY,
+    background: COLORS.BACKGROUND,
     overflow: "hidden",
   };
 

@@ -14,7 +14,14 @@ import {
   Linkedin,
   AlertCircle,
 } from "lucide-react";
-import { COLORS, SHADOWS, ANIMATIONS, RADIUS } from "../styles/designTokens";
+import {
+  COLORS,
+  SHADOWS,
+  ANIMATIONS,
+  RADIUS,
+  SPACING,
+  TYPOGRAPHY,
+} from "../styles/designTokens";
 import emailjs from "@emailjs/browser";
 
 // ⚙️ CONFIGURACIÓN DE EMAILJS
@@ -110,67 +117,67 @@ export default function ContactoApp({ setCurrentApp }) {
     display: "flex",
     justifyContent: "center",
     alignItems: "flex-start",
-    padding: "40px 20px",
+    padding: `${SPACING[10]} ${SPACING[5]}`,
     overflow: "auto",
   };
 
   const contentWrapperStyle = {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
-    gap: "40px",
+    gap: SPACING[10],
     maxWidth: "1200px",
     width: "100%",
     animation: "fadeInUp 0.6s ease-out",
   };
 
   const cardStyle = {
-    background: "#ffffff",
+    background: COLORS.SURFACE,
     borderRadius: RADIUS.LG,
-    padding: "40px",
-    boxShadow: SHADOWS.CARD_DEFAULT,
-    border: `1px solid #e7e5e4`,
+    padding: SPACING[10],
+    boxShadow: SHADOWS.DEFAULT,
+    border: `1px solid ${COLORS.BORDER}`,
   };
 
   const headerStyle = {
-    marginBottom: "30px",
+    marginBottom: SPACING[8],
   };
 
   const titleStyle = {
-    fontSize: "2rem",
-    fontWeight: "800",
-    color: "#1c1917",
-    marginBottom: "10px",
+    fontSize: TYPOGRAPHY.FONT_SIZES["3XL"],
+    fontWeight: TYPOGRAPHY.FONT_WEIGHTS.EXTRABOLD,
+    color: COLORS.TEXT_PRIMARY,
+    marginBottom: SPACING[2],
     display: "flex",
     alignItems: "center",
-    gap: "12px",
+    gap: SPACING[3],
   };
 
   const subtitleStyle = {
-    fontSize: "1rem",
-    color: "#57534e",
-    lineHeight: "1.6",
+    fontSize: TYPOGRAPHY.FONT_SIZES.BASE,
+    color: COLORS.TEXT_SECONDARY,
+    lineHeight: TYPOGRAPHY.LINE_HEIGHTS.RELAXED,
   };
 
   const formGroupStyle = {
-    marginBottom: "20px",
+    marginBottom: SPACING[5],
   };
 
   const labelStyle = {
     display: "block",
-    fontSize: "0.9rem",
-    fontWeight: "600",
-    color: "#1c1917",
-    marginBottom: "8px",
+    fontSize: TYPOGRAPHY.FONT_SIZES.SM,
+    fontWeight: TYPOGRAPHY.FONT_WEIGHTS.SEMIBOLD,
+    color: COLORS.TEXT_PRIMARY,
+    marginBottom: SPACING[2],
   };
 
   const inputStyle = {
     width: "100%",
-    padding: "12px 14px",
-    fontSize: "0.95rem",
-    border: "1px solid #e7e5e4",
+    padding: `${SPACING[3]} ${SPACING[3]}`,
+    fontSize: TYPOGRAPHY.FONT_SIZES.SM,
+    border: `1px solid ${COLORS.BORDER}`,
     borderRadius: RADIUS.MD,
-    background: "#ffffff",
-    color: "#1c1917",
+    background: COLORS.SURFACE,
+    color: COLORS.TEXT_PRIMARY,
     transition: ANIMATIONS.TRANSITION_BASE,
     outline: "none",
     boxSizing: "border-box",
@@ -184,63 +191,61 @@ export default function ContactoApp({ setCurrentApp }) {
   };
 
   const errorStyle = {
-    fontSize: "0.85rem",
-    color: "#dc2626",
-    marginTop: "5px",
+    fontSize: TYPOGRAPHY.FONT_SIZES.XS,
+    color: COLORS.ERROR,
+    marginTop: SPACING[1],
   };
 
   const submitButtonStyle = {
     width: "100%",
-    padding: "14px 24px",
-    fontSize: "1rem",
-    background: submitSuccess
-      ? "linear-gradient(135deg, #047857 0%, #059669 100%)"
-      : "linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)",
-    color: "#ffffff",
+    padding: `${SPACING[3]} ${SPACING[6]}`,
+    fontSize: TYPOGRAPHY.FONT_SIZES.BASE,
+    background: submitSuccess ? COLORS.SUCCESS : COLORS.PRIMARY,
+    color: COLORS.SURFACE,
     border: "none",
     borderRadius: RADIUS.MD,
     cursor: isSubmitting ? "not-allowed" : "pointer",
-    fontWeight: "700",
+    fontWeight: TYPOGRAPHY.FONT_WEIGHTS.BOLD,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: "10px",
+    gap: SPACING[2],
     transition: ANIMATIONS.TRANSITION_BASE,
-    boxShadow: SHADOWS.BUTTON,
-    marginTop: "10px",
+    boxShadow: SHADOWS.MD,
+    marginTop: SPACING[2],
   };
 
   const infoCardStyle = {
-    background: "rgba(250, 250, 249, 0.8)",
-    padding: "20px",
+    background: COLORS.BACKGROUND_SECONDARY,
+    padding: SPACING[5],
     borderRadius: RADIUS.MD,
-    border: "1px solid #e7e5e4",
-    marginBottom: "20px",
+    border: `1px solid ${COLORS.BORDER}`,
+    marginBottom: SPACING[5],
   };
 
   const infoItemStyle = {
     display: "flex",
     alignItems: "flex-start",
-    gap: "15px",
-    marginBottom: "20px",
-    padding: "15px",
-    background: "#ffffff",
+    gap: SPACING[4],
+    marginBottom: SPACING[5],
+    padding: SPACING[4],
+    background: COLORS.SURFACE,
     borderRadius: RADIUS.MD,
-    border: "1px solid #e7e5e4",
+    border: `1px solid ${COLORS.BORDER}`,
   };
 
   const socialLinksStyle = {
     display: "flex",
-    gap: "15px",
-    marginTop: "25px",
+    gap: SPACING[4],
+    marginTop: SPACING[6],
   };
 
   const socialButtonStyle = {
     width: "45px",
     height: "45px",
-    borderRadius: "50%",
-    border: "1px solid #e7e5e4",
-    background: "#ffffff",
+    borderRadius: RADIUS.FULL,
+    border: `1px solid ${COLORS.BORDER}`,
+    background: COLORS.SURFACE,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -249,20 +254,20 @@ export default function ContactoApp({ setCurrentApp }) {
   };
 
   const backButtonStyle = {
-    padding: "12px 20px",
-    fontSize: "0.95rem",
+    padding: `${SPACING[3]} ${SPACING[5]}`,
+    fontSize: TYPOGRAPHY.FONT_SIZES.SM,
     background: "transparent",
-    color: "#57534e",
-    border: "1px solid #e7e5e4",
+    color: COLORS.TEXT_SECONDARY,
+    border: `1px solid ${COLORS.BORDER}`,
     borderRadius: RADIUS.MD,
     cursor: "pointer",
-    fontWeight: "600",
+    fontWeight: TYPOGRAPHY.FONT_WEIGHTS.SEMIBOLD,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: "8px",
+    gap: SPACING[2],
     transition: ANIMATIONS.TRANSITION_BASE,
-    marginTop: "20px",
+    marginTop: SPACING[5],
   };
 
   return (
