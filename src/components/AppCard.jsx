@@ -59,7 +59,8 @@ const AppCard = ({
   };
 
   const iconBoxStyle = {
-    backgroundColor: color + "15",
+    background: `linear-gradient(135deg, ${color}15 0%, ${color}25 100%)`,
+    border: `1px solid ${color}20`,
     color: color,
     padding: "0.875rem",
     borderRadius: RADIUS.LG,
@@ -70,6 +71,7 @@ const AppCard = ({
     width: "fit-content",
     transition: ANIMATIONS.TRANSITION_BASE,
     transform: isHovered && !isFuture ? "scale(1.05)" : "scale(1)",
+    boxShadow: isHovered && !isFuture ? `0 4px 12px ${color}20` : "none",
   };
 
   const cardTitleStyle = {

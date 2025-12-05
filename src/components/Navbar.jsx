@@ -1,7 +1,20 @@
 // components/Navbar.jsx - Modern Minimalist Design
 
 import React, { useState } from "react";
-import { Satellite, Home, Mail, Grid3X3, LogIn } from "lucide-react";
+import {
+  Satellite,
+  Home,
+  Mail,
+  Grid3X3,
+  LogIn,
+  ChevronDown,
+  TrendingUp,
+  AlertTriangle,
+  Calculator,
+  GitCompare,
+  Zap,
+  Image,
+} from "lucide-react";
 import {
   COLORS,
   SHADOWS,
@@ -15,6 +28,7 @@ import UserMenu from "./auth/UserMenu";
 
 const Navbar = ({ setCurrentApp, currentApp }) => {
   const [hoveredItem, setHoveredItem] = useState(null);
+  const [isAppsOpen, setIsAppsOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { isAuthenticated } = useAuth();
 
@@ -76,9 +90,16 @@ const Navbar = ({ setCurrentApp, currentApp }) => {
     const isActive =
       currentApp === appKey ||
       (appKey === "apps" &&
-        ["ndvi", "timeseries", "thresholds", "multiindex", "test"].includes(
-          currentApp
-        ));
+        [
+          "ndvi",
+          "timeseries",
+          "thresholds",
+          "multiindex",
+          "test",
+          "compositor",
+          "change-detection",
+          "thresholds-calculator",
+        ].includes(currentApp));
     const isHovered = hoveredItem === appKey;
 
     return {
@@ -118,16 +139,66 @@ const Navbar = ({ setCurrentApp, currentApp }) => {
     };
   };
 
-  const getRegisterButtonStyle = () => {
-    const isHovered = hoveredItem === "register";
+  const APPS_MENU = [
+    { key: "compositor", label: "Composiciones de Imagenes", icon: Image },
+    { key: "ndvi", label: "Análisis Espectral", icon: Satellite },
+    {
+      key: "timeseries",
+      label: "Series Temporales con Tendencia",
+      icon: TrendingUp,
+    },
+    {
+      key: "thresholds",
+      label: "Análisis con Umbrales de Alerta",
+      icon: AlertTriangle,
+    },
+    {
+      key: "thresholds-calculator",
+      label: "Calculadora de Umbrales",
+      icon: Calculator,
+    },
+    { key: "change-detection", label: "Detección de Cambio", icon: GitCompare },
+    { key: "multiindex", label: "Comparación Multi-índice", icon: Zap },
+  ];
+
+  const dropdownMenuStyle = {
+    position: "absolute",
+    top: "100%",
+    left: "0",
+    marginTop: "0.5rem",
+    backgroundColor: COLORS.SURFACE,
+    border: `1px solid ${COLORS.BORDER}`,
+    borderRadius: RADIUS.MD,
+    boxShadow: SHADOWS.MD,
+    padding: "0.5rem",
+    minWidth: "280px",
+    display: isAppsOpen ? "flex" : "none",
+    flexDirection: "column",
+    gap: "0.25rem",
+    zIndex: Z_INDEX.NAVBAR + 10,
+  };
+
+  const getDropdownItemStyle = (appKey) => {
+    const isHovered = hoveredItem === `app-${appKey}`;
+    const isActive = currentApp === appKey;
+
     return {
-      ...actionButtonBase,
-      backgroundColor: isHovered
-        ? `${COLORS.SECONDARY}20`
-        : `${COLORS.SECONDARY}10`,
-      borderColor: isHovered ? COLORS.SECONDARY : `${COLORS.SECONDARY}40`,
-      color: COLORS.SECONDARY,
-      boxShadow: isHovered ? SHADOWS.SM : "none",
+      padding: "0.75rem 1rem",
+      borderRadius: RADIUS.SM,
+      textDecoration: "none",
+      fontSize: "0.875rem",
+      fontWeight: isActive ? "600" : "500",
+      display: "flex",
+      alignItems: "center",
+      gap: "0.75rem",
+      transition: ANIMATIONS.TRANSITION_BASE,
+      cursor: "pointer",
+      color: isActive ? COLORS.SECONDARY : COLORS.TEXT_PRIMARY,
+      backgroundColor: isActive
+        ? `${COLORS.SECONDARY}10`
+        : isHovered
+        ? COLORS.BACKGROUND_SECONDARY
+        : "transparent",
     };
   };
 
@@ -165,34 +236,90 @@ const Navbar = ({ setCurrentApp, currentApp }) => {
         }}
       >
         <li>
-          <a
+          <button
             style={getLinkStyle("home")}
             onClick={() => handleAppChange("home")}
             onMouseEnter={() => setHoveredItem("home")}
             onMouseLeave={() => setHoveredItem(null)}
           >
             <Home size={18} /> Home
-          </a>
+          </button>
         </li>
         <li>
-          <a
-            style={getLinkStyle("apps")}
-            onClick={() => handleAppChange("ndvi")}
-            onMouseEnter={() => setHoveredItem("apps")}
-            onMouseLeave={() => setHoveredItem(null)}
-          >
-            <Grid3X3 size={18} /> Aplicaciones
-          </a>
+          <div style={{ position: "relative" }}>
+            <button
+              style={{
+                ...getLinkStyle("apps"),
+                background: isAppsOpen
+                  ? `${COLORS.SECONDARY}10`
+                  : getLinkStyle("apps").backgroundColor,
+                color: isAppsOpen
+                  ? COLORS.SECONDARY
+                  : getLinkStyle("apps").color,
+              }}
+              onClick={() => setIsAppsOpen(!isAppsOpen)}
+              onMouseEnter={() => setHoveredItem("apps")}
+              onMouseLeave={() => setHoveredItem(null)}
+            >
+              <Grid3X3 size={18} />
+              Aplicaciones
+              <ChevronDown
+                size={16}
+                style={{
+                  transform: isAppsOpen ? "rotate(180deg)" : "rotate(0deg)",
+                  transition: ANIMATIONS.TRANSITION_BASE,
+                }}
+              />
+            </button>
+
+            {/* Dropdown Menu */}
+            {isAppsOpen && (
+              <>
+                <div
+                  style={{
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    zIndex: Z_INDEX.NAVBAR + 5,
+                    cursor: "default",
+                  }}
+                  onClick={() => setIsAppsOpen(false)}
+                />
+                <div style={dropdownMenuStyle}>
+                  {APPS_MENU.map((app) => {
+                    const Icon = app.icon;
+                    return (
+                      <div
+                        key={app.key}
+                        style={getDropdownItemStyle(app.key)}
+                        onClick={() => {
+                          handleAppChange(app.key);
+                          setIsAppsOpen(false);
+                        }}
+                        onMouseEnter={() => setHoveredItem(`app-${app.key}`)}
+                        onMouseLeave={() => setHoveredItem(null)}
+                      >
+                        <Icon size={18} />
+                        {app.label}
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
         </li>
         <li>
-          <a
+          <button
             style={getLinkStyle("contact")}
             onClick={() => handleAppChange("contact")}
             onMouseEnter={() => setHoveredItem("contact")}
             onMouseLeave={() => setHoveredItem(null)}
           >
             <Mail size={18} /> Contacto
-          </a>
+          </button>
         </li>
       </ul>
 

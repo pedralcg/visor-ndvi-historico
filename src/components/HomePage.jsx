@@ -187,7 +187,7 @@ const HomePage = ({ setCurrentApp }) => {
       title: "Composiciones de Imagenes Sentinel 2",
       description: "Composiciones espectrales e índices para análisis rápido.",
       icon: Image,
-      color: "#047857",
+      color: "#0891b2", // Cyan-600
     },
     {
       key: "ndvi",
@@ -195,7 +195,7 @@ const HomePage = ({ setCurrentApp }) => {
       description:
         "Calcula, visualiza y descarga Índices Espectrales con imágenes satelitales Sentinel-2.",
       icon: Satellite,
-      color: "#047857",
+      color: "#10b981", // Emerald-500
     },
     {
       key: "timeseries",
@@ -203,7 +203,7 @@ const HomePage = ({ setCurrentApp }) => {
       description:
         "Analiza la evolución mensual de índices espectrales y visualiza la tendencia (pendiente) global del área de interés a lo largo del tiempo.",
       icon: TrendingUp,
-      color: "#7c3aed",
+      color: "#8b5cf6", // Violet-500
     },
     {
       key: "thresholds",
@@ -211,7 +211,7 @@ const HomePage = ({ setCurrentApp }) => {
       description:
         "Monitoreo temporal con umbrales de alerta automáticos. Detecta degradación, estrés hídrico y cambios anómalos en la vegetación.",
       icon: AlertTriangle,
-      color: "#ea580c",
+      color: "#f59e0b", // Amber-500
     },
     {
       key: "thresholds-calculator",
@@ -219,7 +219,7 @@ const HomePage = ({ setCurrentApp }) => {
       description:
         "Calcula umbrales óptimos basados en análisis histórico estadístico.",
       icon: Calculator,
-      color: "#3b82f6",
+      color: "#3b82f6", // Blue-500
     },
     {
       key: "change-detection",
@@ -227,7 +227,7 @@ const HomePage = ({ setCurrentApp }) => {
       description:
         "Visualiza diferencias espaciales entre dos periodos temporales.",
       icon: GitCompare,
-      color: "#8b5cf6",
+      color: "#f43f5e", // Rose-500
     },
     {
       key: "multiindex",
@@ -235,7 +235,7 @@ const HomePage = ({ setCurrentApp }) => {
       description:
         "Compara múltiples índices espectrales (NDVI, NBR, CIre, MSI) para una misma fecha y área. Análisis integral de la cobertura vegetal.",
       icon: Zap,
-      color: "#1d4ed8",
+      color: "#6366f1", // Indigo-500
     },
     // {
     //   key: "test",
