@@ -235,7 +235,8 @@ const MapView = forwardRef(
           mapRef.current.invalidateSize();
         }
       }, 300);
-    }, [onGeometrySelected, onReset, ref, ndviLayersMap]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [onGeometrySelected, onReset]);
 
     useEffect(() => {
       if (
