@@ -9,9 +9,13 @@ import {
   Info,
   TrendingUp,
   Database,
+  History,
+  Save,
 } from "lucide-react";
 import MapView from "./MapView";
 import NDVIChart from "./NDVIChart";
+import HistoryPanel from "./common/HistoryPanel";
+import SaveAnalysisModal from "./common/SaveAnalysisModal";
 import {
   COLORS,
   SHADOWS,
@@ -23,6 +27,7 @@ import {
 
 import { ndviService } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
+import historyStorage from "../services/historyStorage";
 
 const S2_MIN_DATE = "2015-06-23";
 
@@ -102,6 +107,8 @@ export default function NdviApp({ setCurrentApp }) {
   const [ndviHistory, setNdviHistory] = useState([]);
   const [showImagesModal, setShowImagesModal] = useState(false);
   const [downloadingGeoTiff, setDownloadingGeoTiff] = useState(false);
+  const [showHistoryPanel, setShowHistoryPanel] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
   const mapRef = useRef(null);
 
   // Manejar cambio de índice
