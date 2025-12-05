@@ -74,7 +74,7 @@ api.interceptors.response.use(
 );
 
 // Endpoints organizados por funcionalidad
-export const ndviService = {
+const ndviService = {
   // Cálculo de índices (NDVI, NBR, etc.)
   calculateIndex: (data) => api.post("/api/ndvi", data),
 
@@ -102,6 +102,48 @@ export const ndviService = {
 
   // Descargas
   downloadGeoTiff: (data) => api.post("/api/download/geotiff", data),
+
+  // ============================================================================
+  // ADMIN ENDPOINTS
+  // ============================================================================
+
+  // Admin - User Management
+  getAdminUsers: (params) =>
+    api.get("/api/admin/users", { params }).then((res) => res.data),
+  getAdminUser: (userId) =>
+    api.get(`/api/admin/users/${userId}`).then((res) => res.data),
+  updateAdminUser: (userId, data) =>
+    api.put(`/api/admin/users/${userId}`, data).then((res) => res.data),
+  deleteAdminUser: (userId) =>
+    api.delete(`/api/admin/users/${userId}`).then((res) => res.data),
+  activateUser: (userId) =>
+    api.post(`/api/admin/users/${userId}/activate`).then((res) => res.data),
+  suspendUser: (userId, reason) =>
+    api
+      .post(`/api/admin/users/${userId}/suspend`, { reason })
+      .then((res) => res.data),
+  updateUserPermissions: (userId, permissions) =>
+    api
+      .put(`/api/admin/users/${userId}/permissions`, { permissions })
+      .then((res) => res.data),
+  updateUserRole: (userId, role) =>
+    api
+      .patch(`/api/admin/users/${userId}/role`, { role })
+      .then((res) => res.data),
+
+  // Admin - Analytics
+  getAdminAnalyticsOverview: () =>
+    api.get("/api/admin/analytics/overview").then((res) => res.data),
+  getAdminUsageStats: (period = "30d") =>
+    api
+      .get("/api/admin/analytics/usage", { params: { period } })
+      .then((res) => res.data),
+  getAdminLogs: (params) =>
+    api.get("/api/admin/logs", { params }).then((res) => res.data),
+
+  // Admin - Stats (legacy)
+  getAdminStats: () => api.get("/api/admin/stats").then((res) => res.data),
 };
 
+export { ndviService };
 export default api;

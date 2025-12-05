@@ -14,6 +14,7 @@ import {
   GitCompare,
   Zap,
   Image,
+  Shield,
 } from "lucide-react";
 import {
   COLORS,
@@ -30,7 +31,7 @@ const Navbar = ({ setCurrentApp, currentApp }) => {
   const [hoveredItem, setHoveredItem] = useState(null);
   const [isAppsOpen, setIsAppsOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   const navStyle = {
     backgroundColor: COLORS.SURFACE,
@@ -321,6 +322,31 @@ const Navbar = ({ setCurrentApp, currentApp }) => {
             <Mail size={18} /> Contacto
           </button>
         </li>
+
+        {/* Admin Panel - Solo visible para administradores */}
+        {isAuthenticated && user?.role === "admin" && (
+          <li>
+            <button
+              style={{
+                ...getLinkStyle("admin"),
+                background:
+                  currentApp === "admin"
+                    ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
+                    : getLinkStyle("admin").backgroundColor,
+                color:
+                  currentApp === "admin"
+                    ? "#ffffff"
+                    : getLinkStyle("admin").color,
+                border: currentApp === "admin" ? "none" : undefined,
+              }}
+              onClick={() => handleAppChange("admin")}
+              onMouseEnter={() => setHoveredItem("admin")}
+              onMouseLeave={() => setHoveredItem(null)}
+            >
+              <Shield size={18} /> Admin
+            </button>
+          </li>
+        )}
       </ul>
 
       {/* Auth section - conditional rendering */}

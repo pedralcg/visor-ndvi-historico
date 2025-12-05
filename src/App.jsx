@@ -1,4 +1,4 @@
-// App.jsx - Actualizado con todas las aplicaciones
+// App.jsx - Actualizado con todas las aplicaciones + Admin Panel
 import React, { useState } from "react";
 import "./App.css";
 import HomePage from "./components/HomePage.jsx";
@@ -12,6 +12,7 @@ import CompositorApp from "./components/CompositorApp.jsx";
 import Navbar from "./components/Navbar.jsx";
 import BackendStatusIndicator from "./components/BackendStatusIndicator.jsx";
 import ContactoApp from "./components/ContactoApp.jsx";
+import AdminPanel from "./components/admin/AdminPanel.jsx";
 import { AuthProvider } from "./contexts/AuthContext.jsx";
 import { COLORS, TYPOGRAPHY } from "./styles/designTokens.js";
 
@@ -56,12 +57,8 @@ function AppContent() {
       case "multiindex":
         return <MultiIndexComparison setCurrentApp={setCurrentApp} />;
 
-      // case "test":
-      //   return (
-      //     <div style={centeredWrapperStyle}>
-      //       <TestApp setCurrentApp={setCurrentApp} />
-      //     </div>
-      //   );
+      case "admin":
+        return <AdminPanel setCurrentApp={setCurrentApp} />;
 
       case "contact":
         return (

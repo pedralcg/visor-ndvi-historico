@@ -8,7 +8,6 @@ import {
   RADIUS,
   SPACING,
   TYPOGRAPHY,
-  Z_INDEX,
   ANIMATIONS,
 } from "../../styles/designTokens";
 
@@ -71,7 +70,7 @@ const UserMenu = () => {
     boxShadow: SHADOWS.XL,
     border: `1px solid ${COLORS.BORDER}`,
     padding: "0",
-    zIndex: Z_INDEX.DROPDOWN,
+    zIndex: 9999, // High z-index to appear above Leaflet map controls (z-index: 400)
     overflow: "hidden",
     animation: "fadeIn 0.2s ease-out",
   };
