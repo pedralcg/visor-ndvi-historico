@@ -2,6 +2,15 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { X, Mail, Lock, User, AlertCircle } from "lucide-react";
+import {
+  COLORS,
+  SHADOWS,
+  RADIUS,
+  SPACING,
+  TYPOGRAPHY,
+  Z_INDEX,
+  ANIMATIONS,
+} from "../../styles/designTokens";
 
 const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
   const [mode, setMode] = useState(initialMode);
@@ -96,35 +105,96 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
     });
   };
 
-  // Estilos inline para el Portal (garantiza que funcione fuera del header)
+  // Estilos usando Design Tokens
   const overlayStyle = {
     position: "fixed",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    backgroundColor: COLORS.OVERLAY,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    zIndex: 99999,
-    padding: "20px",
+    zIndex: Z_INDEX.MODAL,
+    padding: SPACING[5],
     backdropFilter: "blur(5px)",
   };
 
   const modalStyle = {
-    backgroundColor: "white",
-    borderRadius: "24px",
+    backgroundColor: COLORS.SURFACE,
+    borderRadius: RADIUS["2XL"],
     width: "100%",
     maxWidth: "420px",
     position: "relative",
-    boxShadow:
-      "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+    boxShadow: SHADOWS["2XL"],
     maxHeight: "calc(100vh - 40px)",
     overflowY: "auto",
     display: "flex",
     flexDirection: "column",
-    margin: "8px",
+    margin: SPACING[2],
+    animation: "fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+  };
+
+  const inputContainerStyle = {
+    marginBottom: SPACING[4],
+  };
+
+  const labelStyle = {
+    display: "block",
+    fontSize: TYPOGRAPHY.FONT_SIZES.XS,
+    fontWeight: TYPOGRAPHY.FONT_WEIGHTS.SEMIBOLD,
+    color: COLORS.TEXT_SECONDARY,
+    textTransform: "uppercase",
+    letterSpacing: "0.05em",
+    marginBottom: SPACING[1],
+    marginLeft: SPACING[1],
+  };
+
+  const inputWrapperStyle = {
+    position: "relative",
+  };
+
+  const iconStyle = {
+    position: "absolute",
+    left: SPACING[3],
+    top: "50%",
+    transform: "translateY(-50%)",
+    color: COLORS.TEXT_TERTIARY,
+    transition: ANIMATIONS.TRANSITION_BASE,
+  };
+
+  const inputStyle = {
+    width: "100%",
+    paddingLeft: SPACING[10],
+    paddingRight: SPACING[4],
+    paddingTop: SPACING[3],
+    paddingBottom: SPACING[3],
+    backgroundColor: COLORS.BACKGROUND_SECONDARY,
+    border: `1px solid ${COLORS.BORDER}`,
+    borderRadius: RADIUS.XL,
+    fontSize: TYPOGRAPHY.FONT_SIZES.BASE,
+    color: COLORS.TEXT_PRIMARY,
+    outline: "none",
+    transition: ANIMATIONS.TRANSITION_BASE,
+  };
+
+  const buttonStyle = {
+    width: "100%",
+    padding: `${SPACING[3]} ${SPACING[4]}`,
+    backgroundColor: COLORS.SECONDARY,
+    color: COLORS.SURFACE,
+    fontWeight: TYPOGRAPHY.FONT_WEIGHTS.SEMIBOLD,
+    borderRadius: RADIUS.XL,
+    border: "none",
+    cursor: "pointer",
+    transition: ANIMATIONS.TRANSITION_BASE,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: SPACING[2],
+    boxShadow: SHADOWS.MD,
+    marginTop: SPACING[2],
   };
 
   // Usamos createPortal para renderizar en document.body
@@ -135,43 +205,90 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div
-        style={modalStyle}
-        className="animate-in fade-in zoom-in duration-300"
-      >
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        .auth-input:focus {
+          background-color: ${COLORS.SURFACE};
+          border-color: ${COLORS.SECONDARY};
+          box-shadow: 0 0 0 3px ${COLORS.SECONDARY}20;
+        }
+        .auth-input:focus + svg {
+          color: ${COLORS.SECONDARY};
+        }
+      `}</style>
+
+      <div style={modalStyle}>
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
           style={{
             position: "absolute",
-            top: "16px",
-            right: "16px",
+            top: SPACING[4],
+            right: SPACING[4],
             zIndex: 10,
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            color: COLORS.TEXT_TERTIARY,
+            padding: SPACING[2],
+            borderRadius: RADIUS.FULL,
+            transition: ANIMATIONS.TRANSITION_BASE,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = COLORS.BACKGROUND_SECONDARY;
+            e.currentTarget.style.color = COLORS.TEXT_PRIMARY;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "transparent";
+            e.currentTarget.style.color = COLORS.TEXT_TERTIARY;
           }}
         >
           <X size={20} />
         </button>
 
         <div
-          className="px-10 pt-10 pb-4 text-center"
           style={{
-            paddingLeft: "40px",
-            paddingRight: "40px",
-            paddingTop: "40px",
-            paddingBottom: "16px",
+            padding: `${SPACING[10]} ${SPACING[10]} ${SPACING[4]}`,
+            textAlign: "center",
           }}
         >
-          <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
+          <div
+            style={{
+              width: "48px",
+              height: "48px",
+              backgroundColor: `${COLORS.SECONDARY}15`,
+              borderRadius: RADIUS.FULL,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto",
+              marginBottom: SPACING[4],
+            }}
+          >
             {mode === "login" ? (
-              <User className="text-green-600" size={24} />
+              <User color={COLORS.SECONDARY} size={24} />
             ) : (
-              <Mail className="text-green-600" size={24} />
+              <Mail color={COLORS.SECONDARY} size={24} />
             )}
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <h2
+            style={{
+              fontSize: TYPOGRAPHY.FONT_SIZES["2XL"],
+              fontWeight: TYPOGRAPHY.FONT_WEIGHTS.BOLD,
+              color: COLORS.TEXT_PRIMARY,
+              marginBottom: SPACING[2],
+            }}
+          >
             {mode === "login" ? "Bienvenido de nuevo" : "Crear cuenta"}
           </h2>
-          <p className="text-sm text-gray-500">
+          <p
+            style={{
+              fontSize: TYPOGRAPHY.FONT_SIZES.SM,
+              color: COLORS.TEXT_SECONDARY,
+            }}
+          >
             {mode === "login"
               ? "Ingresa tus credenciales para acceder"
               : "Registrate para comenzar a analizar datos"}
@@ -180,40 +297,45 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
 
         <form
           onSubmit={handleSubmit}
-          className="px-10 pb-10 pt-4"
           style={{
-            paddingLeft: "40px",
-            paddingRight: "40px",
-            paddingBottom: "40px",
-            paddingTop: "16px",
+            padding: `${SPACING[4]} ${SPACING[10]} ${SPACING[10]}`,
           }}
         >
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3 text-sm">
+            <div
+              style={{
+                marginBottom: SPACING[4],
+                padding: SPACING[3],
+                backgroundColor: `${COLORS.ERROR}10`,
+                border: `1px solid ${COLORS.ERROR}30`,
+                borderRadius: RADIUS.XL,
+                display: "flex",
+                alignItems: "start",
+                gap: SPACING[3],
+                fontSize: TYPOGRAPHY.FONT_SIZES.SM,
+              }}
+            >
               <AlertCircle
                 size={18}
-                className="text-red-500 mt-0.5 flex-shrink-0"
+                color={COLORS.ERROR}
+                style={{ marginTop: "2px", flexShrink: 0 }}
               />
-              <p className="text-red-600">{error}</p>
+              <p style={{ color: COLORS.ERROR, margin: 0 }}>{error}</p>
             </div>
           )}
 
           {mode === "register" && (
-            <div className="mb-4">
-              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5 ml-1">
-                Nombre completo
-              </label>
-              <div className="relative group">
-                <User
-                  size={18}
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-green-500 transition-colors"
-                />
+            <div style={inputContainerStyle}>
+              <label style={labelStyle}>Nombre completo</label>
+              <div style={inputWrapperStyle}>
+                <User size={18} style={iconStyle} />
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all outline-none text-gray-800 placeholder-gray-400"
+                  style={inputStyle}
+                  className="auth-input"
                   placeholder="Ej. Juan Pérez"
                   required
                 />
@@ -221,69 +343,64 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
             </div>
           )}
 
-          <div className="mb-4">
-            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5 ml-1">
-              Email
-            </label>
-            <div className="relative group">
-              <Mail
-                size={18}
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-green-500 transition-colors"
-              />
+          <div style={inputContainerStyle}>
+            <label style={labelStyle}>Email</label>
+            <div style={inputWrapperStyle}>
+              <Mail size={18} style={iconStyle} />
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all outline-none text-gray-800 placeholder-gray-400"
+                style={inputStyle}
+                className="auth-input"
                 placeholder="nombre@ejemplo.com"
                 required
               />
             </div>
           </div>
 
-          <div className="mb-6">
-            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5 ml-1">
-              Contraseña
-            </label>
-            <div className="relative group">
-              <Lock
-                size={18}
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-green-500 transition-colors"
-              />
+          <div style={{ marginBottom: SPACING[6] }}>
+            <label style={labelStyle}>Contraseña</label>
+            <div style={inputWrapperStyle}>
+              <Lock size={18} style={iconStyle} />
               <input
                 type="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all outline-none text-gray-800 placeholder-gray-400"
+                style={inputStyle}
+                className="auth-input"
                 placeholder="••••••••"
                 required
               />
             </div>
             {mode === "register" && (
-              <p className="mt-1.5 text-xs text-gray-400 ml-1">
+              <p
+                style={{
+                  marginTop: SPACING[1],
+                  fontSize: TYPOGRAPHY.FONT_SIZES.XS,
+                  color: COLORS.TEXT_TERTIARY,
+                  marginLeft: SPACING[1],
+                }}
+              >
                 Mínimo 8 caracteres
               </p>
             )}
           </div>
 
           {mode === "register" && (
-            <div className="mb-6">
-              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5 ml-1">
-                Confirmar contraseña
-              </label>
-              <div className="relative group">
-                <Lock
-                  size={18}
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-green-500 transition-colors"
-                />
+            <div style={{ marginBottom: SPACING[6] }}>
+              <label style={labelStyle}>Confirmar contraseña</label>
+              <div style={inputWrapperStyle}>
+                <Lock size={18} style={iconStyle} />
                 <input
                   type="password"
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all outline-none text-gray-800 placeholder-gray-400"
+                  style={inputStyle}
+                  className="auth-input"
                   placeholder="••••••••"
                   required
                 />
@@ -294,12 +411,37 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 px-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none shadow-lg shadow-green-600/20 flex items-center justify-center gap-2"
-            style={{ backgroundColor: "#16a34a", color: "white" }}
+            style={{
+              ...buttonStyle,
+              opacity: loading ? 0.7 : 1,
+              cursor: loading ? "not-allowed" : "pointer",
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) {
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow = SHADOWS.LG;
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!loading) {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = SHADOWS.MD;
+              }
+            }}
           >
             {loading ? (
               <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <div
+                  style={{
+                    width: "20px",
+                    height: "20px",
+                    border: "2px solid rgba(255,255,255,0.3)",
+                    borderTopColor: "#fff",
+                    borderRadius: "50%",
+                    animation: "spin 1s linear infinite",
+                  }}
+                ></div>
+                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
                 <span>Procesando...</span>
               </>
             ) : (
@@ -309,14 +451,31 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
             )}
           </button>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-500">
+          <div style={{ marginTop: SPACING[6], textAlign: "center" }}>
+            <p
+              style={{
+                fontSize: TYPOGRAPHY.FONT_SIZES.SM,
+                color: COLORS.TEXT_SECONDARY,
+              }}
+            >
               {mode === "login" ? "¿No tienes cuenta?" : "¿Ya tienes cuenta?"}{" "}
               <button
                 type="button"
                 onClick={switchMode}
-                className="text-green-600 hover:text-green-700 font-semibold hover:underline transition-all"
-                style={{ color: "#16a34a" }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: COLORS.SECONDARY,
+                  fontWeight: TYPOGRAPHY.FONT_WEIGHTS.SEMIBOLD,
+                  cursor: "pointer",
+                  padding: 0,
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.textDecoration = "underline")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.textDecoration = "none")
+                }
               >
                 {mode === "login" ? "Regístrate gratis" : "Inicia sesión"}
               </button>

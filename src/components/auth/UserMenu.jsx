@@ -2,6 +2,15 @@ import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { LogOut, Shield, ChevronDown } from "lucide-react";
+import {
+  COLORS,
+  SHADOWS,
+  RADIUS,
+  SPACING,
+  TYPOGRAPHY,
+  Z_INDEX,
+  ANIMATIONS,
+} from "../../styles/designTokens";
 
 const UserMenu = () => {
   const { user, logout, isAdmin } = useAuth();
@@ -51,58 +60,57 @@ const UserMenu = () => {
       .slice(0, 2);
   };
 
-  // Estilos
+  // Estilos usando Design Tokens
   const dropdownStyle = {
     position: "fixed",
     top: `${dropdownPosition.top}px`,
     right: `${dropdownPosition.right}px`,
     width: "280px",
-    backgroundColor: "#ffffff",
-    borderRadius: "12px",
-    boxShadow:
-      "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
-    border: "1px solid #e7e5e4",
+    backgroundColor: COLORS.SURFACE,
+    borderRadius: RADIUS.LG,
+    boxShadow: SHADOWS.XL,
+    border: `1px solid ${COLORS.BORDER}`,
     padding: "0",
-    zIndex: 50000,
+    zIndex: Z_INDEX.DROPDOWN,
     overflow: "hidden",
     animation: "fadeIn 0.2s ease-out",
   };
 
   const headerStyle = {
-    padding: "20px",
-    borderBottom: "1px solid #f5f5f4",
+    padding: SPACING[5],
+    borderBottom: `1px solid ${COLORS.BACKGROUND_SECONDARY}`,
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    backgroundColor: "#fafaf9",
+    backgroundColor: COLORS.BACKGROUND_SECONDARY,
   };
 
   const avatarLargeStyle = {
     width: "48px",
     height: "48px",
-    borderRadius: "50%",
-    backgroundColor: "#047857",
-    color: "#ffffff",
+    borderRadius: RADIUS.FULL,
+    backgroundColor: COLORS.SECONDARY,
+    color: COLORS.SURFACE,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "1.2rem",
-    fontWeight: "700",
-    marginBottom: "12px",
-    boxShadow: "0 2px 5px rgba(4, 120, 87, 0.2)",
+    fontSize: TYPOGRAPHY.FONT_SIZES.LG,
+    fontWeight: TYPOGRAPHY.FONT_WEIGHTS.BOLD,
+    marginBottom: SPACING[3],
+    boxShadow: SHADOWS.MD,
   };
 
   const statsContainerStyle = {
-    padding: "16px",
+    padding: SPACING[4],
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
-    gap: "12px",
+    gap: SPACING[3],
   };
 
   const statBoxStyle = {
-    backgroundColor: "#f5f5f4",
-    borderRadius: "8px",
-    padding: "10px",
+    backgroundColor: COLORS.BACKGROUND_SECONDARY,
+    borderRadius: RADIUS.MD,
+    padding: SPACING[2],
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
@@ -111,49 +119,66 @@ const UserMenu = () => {
   };
 
   const statLabelStyle = {
-    fontSize: "0.75rem",
-    color: "#78716c",
-    marginBottom: "4px",
-    fontWeight: "600",
+    fontSize: TYPOGRAPHY.FONT_SIZES.XS,
+    color: COLORS.TEXT_SECONDARY,
+    marginBottom: SPACING[1],
+    fontWeight: TYPOGRAPHY.FONT_WEIGHTS.SEMIBOLD,
     textTransform: "uppercase",
     letterSpacing: "0.5px",
   };
 
   const statValueStyle = {
-    fontSize: "0.9rem",
-    color: "#1c1917",
-    fontWeight: "700",
+    fontSize: TYPOGRAPHY.FONT_SIZES.SM,
+    color: COLORS.TEXT_PRIMARY,
+    fontWeight: TYPOGRAPHY.FONT_WEIGHTS.BOLD,
     display: "flex",
     alignItems: "center",
-    gap: "6px",
+    gap: SPACING[1],
   };
 
   const logoutButtonStyle = {
     width: "100%",
-    padding: "14px",
+    padding: SPACING[3],
     border: "none",
-    borderTop: "1px solid #f5f5f4",
+    borderTop: `1px solid ${COLORS.BACKGROUND_SECONDARY}`,
     backgroundColor: "transparent",
-    color: "#dc2626",
-    fontSize: "0.9rem",
-    fontWeight: "600",
+    color: COLORS.ERROR,
+    fontSize: TYPOGRAPHY.FONT_SIZES.SM,
+    fontWeight: TYPOGRAPHY.FONT_WEIGHTS.SEMIBOLD,
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: "8px",
-    transition: "background-color 0.2s",
+    gap: SPACING[2],
+    transition: ANIMATIONS.TRANSITION_BASE,
   };
 
   const dropdownContent = isOpen && (
     <div ref={menuRef} style={dropdownStyle}>
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
       {/* Header con Avatar Grande */}
       <div style={headerStyle}>
         <div style={avatarLargeStyle}>{getInitials(user.name)}</div>
-        <div style={{ fontSize: "1rem", fontWeight: "700", color: "#1c1917" }}>
+        <div
+          style={{
+            fontSize: TYPOGRAPHY.FONT_SIZES.BASE,
+            fontWeight: TYPOGRAPHY.FONT_WEIGHTS.BOLD,
+            color: COLORS.TEXT_PRIMARY,
+          }}
+        >
           {user.name}
         </div>
-        <div style={{ fontSize: "0.85rem", color: "#78716c" }}>
+        <div
+          style={{
+            fontSize: TYPOGRAPHY.FONT_SIZES.SM,
+            color: COLORS.TEXT_SECONDARY,
+          }}
+        >
           {user.email}
         </div>
       </div>
@@ -177,7 +202,9 @@ const UserMenu = () => {
       <button
         onClick={handleLogout}
         style={logoutButtonStyle}
-        onMouseEnter={(e) => (e.target.style.backgroundColor = "#fef2f2")}
+        onMouseEnter={(e) =>
+          (e.target.style.backgroundColor = `${COLORS.ERROR}10`)
+        }
         onMouseLeave={(e) => (e.target.style.backgroundColor = "transparent")}
       >
         <LogOut size={16} />
@@ -192,43 +219,69 @@ const UserMenu = () => {
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         style={{
-          backgroundColor: isOpen ? "rgba(28, 25, 23, 0.05)" : "transparent",
-          border: "1px solid #e7e5e4",
-          borderRadius: "10px",
-          padding: "6px 12px",
+          backgroundColor: isOpen ? COLORS.BACKGROUND_SECONDARY : "transparent",
+          border: `1px solid ${COLORS.BORDER}`,
+          borderRadius: RADIUS.LG,
+          padding: `${SPACING[1]} ${SPACING[3]}`,
           cursor: "pointer",
           display: "flex",
           alignItems: "center",
-          gap: "10px",
-          transition: "all 0.2s ease",
+          gap: SPACING[2],
+          transition: ANIMATIONS.TRANSITION_BASE,
           height: "42px",
         }}
         onMouseEnter={(e) => {
           if (!isOpen)
-            e.currentTarget.style.backgroundColor = "rgba(28, 25, 23, 0.05)";
+            e.currentTarget.style.backgroundColor = COLORS.BACKGROUND_SECONDARY;
         }}
         onMouseLeave={(e) => {
           if (!isOpen) e.currentTarget.style.backgroundColor = "transparent";
         }}
       >
-        <div className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center font-medium text-sm shadow-sm">
+        <div
+          style={{
+            width: "32px",
+            height: "32px",
+            borderRadius: RADIUS.FULL,
+            backgroundColor: COLORS.SECONDARY,
+            color: COLORS.SURFACE,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontWeight: TYPOGRAPHY.FONT_WEIGHTS.MEDIUM,
+            fontSize: TYPOGRAPHY.FONT_SIZES.SM,
+            boxShadow: SHADOWS.SM,
+          }}
+        >
           {getInitials(user.name)}
         </div>
 
         <div className="hidden md:block text-left">
-          <div className="text-sm font-bold text-gray-800 flex items-center gap-1 leading-tight">
+          <div
+            style={{
+              fontSize: TYPOGRAPHY.FONT_SIZES.SM,
+              fontWeight: TYPOGRAPHY.FONT_WEIGHTS.BOLD,
+              color: COLORS.TEXT_PRIMARY,
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              lineHeight: 1.2,
+            }}
+          >
             {user.name}
             {isAdmin && (
-              <Shield size={12} className="text-green-600" title="Admin" />
+              <Shield size={12} color={COLORS.SECONDARY} title="Admin" />
             )}
           </div>
         </div>
 
         <ChevronDown
           size={16}
-          className={`text-gray-400 transition-transform ${
-            isOpen ? "rotate-180" : ""
-          }`}
+          color={COLORS.TEXT_TERTIARY}
+          style={{
+            transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+            transition: ANIMATIONS.TRANSITION_BASE,
+          }}
         />
       </button>
 
